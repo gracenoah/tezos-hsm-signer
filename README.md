@@ -25,7 +25,7 @@ tezos-client transfer 1 from remote to remote
 
 ```shell
 # Unit Testing
-go test signer/*
+go test ./...
 ```
 
 **Future Work**
