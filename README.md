@@ -1,6 +1,8 @@
 Tezos Remote Signer
 ===================
 
+![pipeline status](https://gitlab.com/polychain/tezos-remote-signer/badges/master/pipeline.svg) ![coverage](https://gitlab.com/polychain/tezos-remote-signer/badges/master/coverage.svg)
+
 Implement the Tezos HTTP signing interface, backed by an HSM over PKCS#11.
 
 ### Usage
