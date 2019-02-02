@@ -45,7 +45,8 @@ build-image:
     before_script: 
       - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
     script:
-      - docker build --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA --tag $CONTAINER_IMAGE:latest .
+      - docker build --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA --tag $CONTAINER_IMAGE:$CI_COMMIT_REF_SLUG --tag $CONTAINER_IMAGE:latest .
       - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+      - docker push $CONTAINER_IMAGE:$CI_COMMIT_REF_SLUG
       - docker push $CONTAINER_IMAGE:latest
 
