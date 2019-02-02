@@ -1,7 +1,13 @@
 image: golang:1.11
 
+services:
+  - docker:dind
+
 variables:
   REPO_NAME: gitlab.com/polychain/tezos-remote-signer
+  CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
 
 before_script:
   - apt-get update
@@ -25,10 +31,21 @@ test:
       - go vet $(go list ./... | grep -v /vendor/)
       - go test -race $(go list ./... | grep -v /vendor/)
 
-compile:
+build-binary:
     stage: build
     script:
       - GOOS=linux go build -race -o $CI_PROJECT_DIR/tezos-remote-signer
     artifacts:
       paths:
         - tezos-remote-signer
+ 
+build-image:
+    image: docker:stable
+    stage: build
+    before_script: 
+      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    script:
+      - docker build --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA --tag $CONTAINER_IMAGE:latest .
+      - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+      - docker push $CONTAINER_IMAGE:latest
+
