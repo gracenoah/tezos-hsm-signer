@@ -130,7 +130,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	debugln("Received sign request: ", string(body))
 
 	// Parse and sign the message
-	request, err := ParseRequest(body)
+	op, err := ParseOperation(body)
 	if err != nil {
 		log.Println("Error parsing signing request: ", err)
 
@@ -140,7 +140,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Validate the operation
-	if request.OpType() == opTypeGeneric && !server.enableTx {
+	if op.Type() == opTypeGeneric && !server.enableTx {
 		// Disallow transactions unless specifically enabled
 		log.Println("Error, transaction signing disabled")
 
@@ -148,7 +148,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 		fmt.Fprintf(w, "{\"error\":\"%s\"}", "transactions cannot be signed")
 		return
 	}
-	if !key.IsSafeToSign(request.OpType(), request.Level()) {
+	if !key.IsSafeToSign(op.Type(), op.Level()) {
 		// Never endorse or bake at the same level twice
 		log.Println("Error, this level has already been signed")
 
@@ -158,8 +158,8 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Sign the operation
-	server.keyManager.SetLastSignedLevel(key, request.OpType(), request.Level())
-	signed, err := request.TzSign(server.signer, key)
+	server.keyManager.SetLastSignedLevel(key, op.Type(), op.Level())
+	signed, err := op.TzSign(server.signer, key)
 	if err != nil {
 		log.Println("Error signing request:", err)
 
