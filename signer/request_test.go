@@ -6,40 +6,6 @@ import (
 	"testing"
 )
 
-func TestStripQuotes(t *testing.T) {
-	var result []byte
-	var err error
-
-	expectError := func(err error, result []byte, msg string) {
-		if err == nil || result != nil {
-			log.Printf("%v, result: %v, error: %v", msg, string(result), err)
-			t.Fail()
-		}
-	}
-	expectSuccess := func(err error, result []byte, msg string) {
-		if err != nil || string(result) != "testing" {
-			log.Printf("%v, result: %v, error: %v", msg, string(result), err)
-			t.Fail()
-		}
-	}
-
-	result, err = stripQuotes([]byte(""))
-	expectError(err, result, "Expect error on empty string")
-	result, err = stripQuotes([]byte("\"testing"))
-	expectError(err, result, "Expect error with only one quote")
-	result, err = stripQuotes([]byte("\"testing\"abc"))
-	expectError(err, result, "No non-space characters allowed after quotes")
-	result, err = stripQuotes([]byte("abc\"testing\""))
-	expectError(err, result, "No non-space characters allowed before quotes")
-
-	result, err = stripQuotes([]byte("\"testing\""))
-	expectSuccess(err, result, "Result should match text within quotes")
-	result, err = stripQuotes([]byte("  \n \"testing\""))
-	expectSuccess(err, result, "Whitespace allowed before quotes")
-	result, err = stripQuotes([]byte("\"testing\"\n"))
-	expectSuccess(err, result, "Whitespace allowed after quotes")
-}
-
 func TestParseTx(t *testing.T) {
 	signingRequest, err := ParseRequest([]byte(testP256Tx.Operation))
 
