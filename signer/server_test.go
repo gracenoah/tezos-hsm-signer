@@ -44,7 +44,7 @@ func TestGetEmptyKeys(t *testing.T) {
 	r := httptest.NewRequest("GET", "/keys/123", strings.NewReader(""))
 	w := httptest.NewRecorder()
 
-	server.RouteKeys(w, r)
+	Middleware(server.RouteKeys)(w, r)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -66,7 +66,7 @@ func TestGetKeys(t *testing.T) {
 	r := httptest.NewRequest("GET", path, strings.NewReader(""))
 	w := httptest.NewRecorder()
 
-	server.RouteKeys(w, r)
+	Middleware(server.RouteKeys)(w, r)
 
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -81,6 +81,23 @@ func TestGetKeys(t *testing.T) {
 	}
 }
 
+func TestRouteUnmatched(t *testing.T) {
+	// Test: GET /<random endpoint>
+	// Should return a 404
+	path := "/random"
+	r := httptest.NewRequest("GET", path, strings.NewReader(""))
+	w := httptest.NewRecorder()
+
+	Middleware(RouteUnmatched)(w, r)
+
+	resp := w.Result()
+
+	if resp.StatusCode != http.StatusNotFound {
+		log.Println("TestRouteUnmatched: Status code should be 404")
+		t.Fail()
+	}
+}
+
 func TestAuthorizedKeys(t *testing.T) {
 	// Test: GET /authorized_keys
 	// An empy set of authorized keys should be returned
@@ -88,7 +105,7 @@ func TestAuthorizedKeys(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	var server = Server{}
-	server.RouteAuthorizedKeys(w, r)
+	Middleware(server.RouteAuthorizedKeys)(w, r)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 
@@ -120,7 +137,7 @@ func testPost(t *testing.T, server *Server, test testOperation) (*http.Response,
 	w := httptest.NewRecorder()
 
 	// Sign
-	server.RouteKeys(w, r)
+	Middleware(server.RouteKeys)(w, r)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 

@@ -5,8 +5,9 @@ type testOperation struct {
 	HsmResponse    string
 	SignerResponse string
 	PublicKeyHash  string
-	OpType         int
+	OpType         uint8
 	Level          string
+	ChainID        string
 }
 
 // Test Transactions
@@ -18,6 +19,7 @@ var (
 		HsmResponse:    "31ccb1d176e80b7caa2164d3c18f5c3ae257e68e44b93851687d2be2b8d0725f8ae4458e8e7174ade426ef57d08970184b4261bd8b65eca100110e246e30b722",
 		SignerResponse: "{\"signature\":\"spsig1CKrXpQWRoyKxcJHFXGT3sc9ZpdpBEQwLmjoJQitLQCg8hSxrcoMwuZw4bfaC44K4k4U57QBhneeNy389vNFuS7oNtTCwF\"}",
 		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
+		ChainID:        "80270c97",
 	}
 	testP256Tx = testOperation{
 		// tezos-client transfer 1 from remote-secp256r1 to remote-secp256r1
@@ -26,6 +28,7 @@ var (
 		HsmResponse:    "385321c63d21c65009fb0cd8c1845bfb7f2e69048a844040176c4178488f1315c6d8970d6f356c05c1ec13864e21d9a5e0f627e276f50126f38a4bce2de1ffa6",
 		SignerResponse: "{\"signature\":\"p2sigUfup3yJF6tQUAzzztLFyAtSwXHiVm6TinFEgB858JAeeopgJ5Ns4iX34i63N7N3hyxVtuXHmUAVj4KqY13renR5L3PAMx\"}",
 		PublicKeyHash:  "tz3fNgiRyEZeXD5eh6rEocSp8PBzii2w38Ku",
+		ChainID:        "07456de9",
 	}
 )
 
@@ -39,6 +42,7 @@ var (
 		SignerResponse: "{\"signature\":\"spsig1dkD3k1tKoyiwno2cLJB9tgTgFJzW9tAXzDn5NbvDaamKggVRSnCRsCfBu8j7K5xoZmEmijstVhit1Z9A4mpggpemq2zBs\"}",
 		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
 		Level:          "256877",
+		ChainID:        "7a06a770",
 	}
 
 	testEndorseLevel259938 = testOperation{
@@ -49,6 +53,7 @@ var (
 		SignerResponse: "{\"signature\":\"spsig1C1YcyDsYwiV2F1YimwQUDPuz1AuCj5UVb6rfZ2Dm1iCj7k1aKY31Nxnikx13W3NGjf9BbbWaPpZWJx3qq8MNLp2YX3bvU\"}",
 		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
 		Level:          "259938",
+		ChainID:        "7a06a770",
 	}
 
 	testEndorseLevel259939 = testOperation{
@@ -59,6 +64,7 @@ var (
 		SignerResponse: "{\"signature\":\"spsig1LeCXtYt7Ru24o3EyEuHcnxSfDbVDrUtkf9RXwJ23DwXZBrpspdG3S9TP842Bopb6jSEKNViMGSDLGeX6ejrdHyNcsjb1Z\"}",
 		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
 		Level:          "259939",
+		ChainID:        "7a06a770",
 	}
 )
 
@@ -72,5 +78,6 @@ var (
 		SignerResponse: "{\"signature\":\"spsig1EX3PsUAHsQQUYpztfrV5w1GEPsDwJmLBhE2JSUCinH9hBgbL2fwbG73ZYfSB4pJ6aW98gTGh1VMBBU7YcGPQiBmX2o7kM\"}",
 		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
 		Level:          "146930",
+		ChainID:        "8eceda2f",
 	}
 )

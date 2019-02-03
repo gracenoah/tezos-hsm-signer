@@ -61,11 +61,22 @@ func ParseRequest(requestBytes []byte) (*Request, error) {
 	return &request, nil
 }
 
+// OpType of this tezos operation included in the signing request
+func (request *Request) OpType() uint8 {
+	return request.hex[0]
+}
+
 // Hex returns a copy of the parsed hex bytes of the signing request
 func (request *Request) Hex() []byte {
 	hexCopy := make([]byte, len(request.hex))
 	copy(hexCopy, request.hex)
 	return hexCopy
+}
+
+// ChainID to determine what we're running on
+func (request *Request) ChainID() string {
+	chainID := request.hex[1:5]
+	return hex.EncodeToString(chainID)
 }
 
 // Level returns a copy of the level, if one was parsed from this request
@@ -77,11 +88,6 @@ func (request *Request) Level() *big.Int {
 	}
 	log.Println("Warn: Requested level for unexpected optype", request.OpType())
 	return nil
-}
-
-// OpType of this tezos operation included in the signing request
-func (request *Request) OpType() uint8 {
-	return request.hex[0]
 }
 
 // TzSign this request with the provided Signer and Key
