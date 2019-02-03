@@ -61,11 +61,6 @@ func ParseRequest(requestBytes []byte) (*Request, error) {
 	return &request, nil
 }
 
-// OpType of this tezos operation included in the signing request
-func (request *Request) OpType() uint8 {
-	return request.hex[0]
-}
-
 // Hex returns a copy of the parsed hex bytes of the signing request
 func (request *Request) Hex() []byte {
 	hexCopy := make([]byte, len(request.hex))
@@ -73,10 +68,16 @@ func (request *Request) Hex() []byte {
 	return hexCopy
 }
 
+// OpType of this tezos operation included in the signing request
+func (request *Request) OpType() uint8 {
+	return request.hex[0]
+}
+
 // ChainID to determine what we're running on
 func (request *Request) ChainID() string {
 	chainID := request.hex[1:5]
-	return hex.EncodeToString(chainID)
+	prefix, _ := hex.DecodeString(tzChainID)
+	return b58CheckEncode(prefix, chainID)
 }
 
 // Level returns a copy of the level, if one was parsed from this request

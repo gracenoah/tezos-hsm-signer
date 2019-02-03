@@ -47,11 +47,11 @@ func testParse(t *testing.T, op testOperation, id string) {
 		log.Printf("%v: Incorrectly parsed Chain ID. Received %v, expecting %v\n", id, request.ChainID(), op.ChainID)
 		t.Fail()
 	}
-
 }
 
 func TestParseEndorsement(t *testing.T) {
 	testParse(t, testEndorse, "Endorse")
+
 }
 
 func TestParseBlock(t *testing.T) {
