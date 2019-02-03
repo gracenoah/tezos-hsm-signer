@@ -37,6 +37,9 @@ const (
 	tzSecp256k1Signature = "0d7365133f" // spsig1 (len: 99)
 	tzP256Signature      = "36f02c34"   // p2sig (len: 98)
 	tzGenericSignature   = "04822b"     // sig (len: 96)
+
+	/* Chain ID */
+	tzChainID = "575200" // Net(15)
 )
 
 // getSignaturePrefix for a given key to produce the correct
