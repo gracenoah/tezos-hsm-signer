@@ -38,7 +38,7 @@ func (key *Key) IsECDSA() bool {
 
 // IsSafeToSign at this level
 func (key *Key) IsSafeToSign(operation uint8, level *big.Int) bool {
-	if operation == opTypeTx {
+	if operation == opTypeGeneric {
 		return true
 	} else if operation == opTypeEndorsement {
 		return getBigInt(key.LastEndorseLevel).Cmp(level) == -1

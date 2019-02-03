@@ -49,7 +49,7 @@ func (keyManager *KeyManager) SetLastSignedLevel(key *Key, operation uint8, leve
 		log.Fatal("Signing must always be signing at a higher level.  Exiting")
 	}
 
-	if operation == opTypeTx {
+	if operation == opTypeGeneric {
 		return
 	} else if operation == opTypeEndorsement {
 		key.LastEndorseLevel = level.String()

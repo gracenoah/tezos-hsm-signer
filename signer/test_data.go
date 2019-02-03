@@ -13,7 +13,7 @@ type testOperation struct {
 var (
 	testSecp256k1Tx = testOperation{
 		// tezos-client transfer 1 from remote-secp256k1 to remote-secp256k1
-		OpType:         opTypeTx,
+		OpType:         opTypeGeneric,
 		Operation:      "\"0380270c97773c117d71d95e96f3a5292f7949f571a31cbc80994f5fea61b1546608000154f5d8f71ce18f9f05bb885a4120e64c667bc1b4fb09b9b037d84f00c0843d000154f5d8f71ce18f9f05bb885a4120e64c667bc1b400\"",
 		HsmResponse:    "31ccb1d176e80b7caa2164d3c18f5c3ae257e68e44b93851687d2be2b8d0725f8ae4458e8e7174ade426ef57d08970184b4261bd8b65eca100110e246e30b722",
 		SignerResponse: "{\"signature\":\"spsig1CKrXpQWRoyKxcJHFXGT3sc9ZpdpBEQwLmjoJQitLQCg8hSxrcoMwuZw4bfaC44K4k4U57QBhneeNy389vNFuS7oNtTCwF\"}",
@@ -21,7 +21,7 @@ var (
 	}
 	testP256Tx = testOperation{
 		// tezos-client transfer 1 from remote-secp256r1 to remote-secp256r1
-		OpType:         opTypeTx,
+		OpType:         opTypeGeneric,
 		Operation:      "\"0307456de90f901440e17e76d95a79b74827cc5663ca36994d8603992bea6d6637080002d0ea30de52fb4806d075ab8d312d19be7d0c23e9fb09be8e35d84f00c0843d0002d0ea30de52fb4806d075ab8d312d19be7d0c23e900\"",
 		HsmResponse:    "385321c63d21c65009fb0cd8c1845bfb7f2e69048a844040176c4178488f1315c6d8970d6f356c05c1ec13864e21d9a5e0f627e276f50126f38a4bce2de1ffa6",
 		SignerResponse: "{\"signature\":\"p2sigUfup3yJF6tQUAzzztLFyAtSwXHiVm6TinFEgB858JAeeopgJ5Ns4iX34i63N7N3hyxVtuXHmUAVj4KqY13renR5L3PAMx\"}",

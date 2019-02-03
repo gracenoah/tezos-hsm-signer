@@ -17,11 +17,12 @@ type Request struct {
 	hex []byte
 }
 
-// Types of Requests that can be signed
+// Watermark of different operations
+// According to: https://gitlab.com/tezos/tezos/blob/master/src/lib_crypto/signature.ml#L523
 const (
 	opTypeBlock       = 0x01
 	opTypeEndorsement = 0x02
-	opTypeTx          = 0x03
+	opTypeGeneric     = 0x03
 )
 
 // ParseRequest parses a raw byte string into a meaningful signing payload
@@ -47,8 +48,8 @@ func ParseRequest(requestBytes []byte) (*Request, error) {
 
 	// Validate and print debug statements
 	switch request.OpType() {
-	case opTypeTx:
-		debugln("Request is a Transaction")
+	case opTypeGeneric:
+		debugln("Request is Generic.  Possibly a Transaction")
 	case opTypeBlock:
 		debugln("Request is a Block at level: ", request.Level().String())
 	case opTypeEndorsement:

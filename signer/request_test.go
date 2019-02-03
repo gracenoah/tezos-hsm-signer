@@ -14,7 +14,7 @@ func TestParseTx(t *testing.T) {
 		t.Fail()
 	}
 
-	if signingRequest.OpType() != opTypeTx {
+	if signingRequest.OpType() != opTypeGeneric {
 		log.Println("Error decoding the tx type")
 		t.Fail()
 	}

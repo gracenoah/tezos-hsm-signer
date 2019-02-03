@@ -140,7 +140,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Validate the operation
-	if request.OpType() == opTypeTx && !server.enableTx {
+	if request.OpType() == opTypeGeneric && !server.enableTx {
 		// Disallow transactions unless specifically enabled
 		log.Println("Error, transaction signing disabled")
 
