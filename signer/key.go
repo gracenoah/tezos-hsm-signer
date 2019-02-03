@@ -3,6 +3,7 @@ package signer
 import (
 	"log"
 	"math/big"
+	"strings"
 	"sync"
 )
 
@@ -20,15 +21,14 @@ type Key struct {
 
 // Curve represented by this key
 func (key *Key) Curve() int {
-	switch key.PublicKeyHash[:3] {
-	case "tz1":
+	if strings.HasPrefix(key.PublicKeyHash, "tz1") {
 		return curveEd25519
-	case "tz2":
+	} else if strings.HasPrefix(key.PublicKeyHash, "tz2") {
 		return curveSecp256k1
-	case "tz3":
+	} else if strings.HasPrefix(key.PublicKeyHash, "tz3") {
 		return curveNistP256
 	}
-	return -1
+	return curveUnknown
 }
 
 // IsECDSA Curve or EdDSA Curve

@@ -1,10 +1,10 @@
 package signer
 
 import (
-	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
@@ -14,10 +14,7 @@ import (
 // Request parses and validates an arbitrary request
 // to sign some message before passing to the Signer
 type Request struct {
-	raw       []byte
-	parsedHex []byte
-	opType    uint8
-	level     *big.Int
+	hex []byte
 }
 
 // Types of Requests that can be signed
@@ -29,39 +26,35 @@ const (
 
 // ParseRequest parses a raw byte string into a meaningful signing payload
 // if the request can be parsed and is valid
-func ParseRequest(raw []byte) (*Request, error) {
+func ParseRequest(requestBytes []byte) (*Request, error) {
 
 	// Must begin and end with quotes
-	parsed, err := stripQuotes(raw)
-	if err != nil {
-		return nil, err
+	requestString := strings.TrimSpace(string(requestBytes))
+	if !strings.HasPrefix(requestString, "\"") || !strings.HasSuffix(requestString, "\"") {
+		return nil, errors.New("request: A signing request must begin and end with a quote")
 	}
+	requestString = strings.Trim(requestString, "\"")
 
 	// Must be valid hex chars
-	parsedHex := make([]byte, hex.DecodedLen(len(parsed)))
-	_, err = hex.Decode(parsedHex, parsed)
+	parsedHex, err := hex.DecodeString(requestString)
 	if err != nil {
 		return nil, err
 	}
 
 	request := Request{
-		raw:       raw,
-		parsedHex: parsedHex,
-		opType:    parsedHex[0],
+		hex: parsedHex,
 	}
 
-	// Parse operation specific fields
-	switch request.opType {
+	// Validate and print debug statements
+	switch request.OpType() {
 	case opTypeTx:
 		debugln("Request is a Transaction")
 	case opTypeBlock:
-		request.level = new(big.Int).SetBytes(parsedHex[5:9])
-		debugln("Request is a Block")
+		debugln("Request is a Block at level: ", request.Level().String())
 	case opTypeEndorsement:
-		request.level = new(big.Int).SetBytes(parsedHex[len(parsedHex)-4:])
-		debugln("Request is an Endorsement at level: ", request.level.String())
+		debugln("Request is an Endorsement at level: ", request.Level().String())
 	default:
-		return nil, fmt.Errorf("Unsupported Tx Type: %v", request.opType)
+		return nil, fmt.Errorf("Unsupported Operation Type: %v", request.OpType())
 	}
 
 	return &request, nil
@@ -69,43 +62,25 @@ func ParseRequest(raw []byte) (*Request, error) {
 
 // Hex returns a copy of the parsed hex bytes of the signing request
 func (request *Request) Hex() []byte {
-	hexCopy := make([]byte, len(request.parsedHex))
-	copy(hexCopy, request.parsedHex)
+	hexCopy := make([]byte, len(request.hex))
+	copy(hexCopy, request.hex)
 	return hexCopy
 }
 
 // Level returns a copy of the level, if one was parsed from this request
 func (request *Request) Level() *big.Int {
-	if request.level != nil {
-		return new(big.Int).Set(request.level)
+	if request.OpType() == opTypeBlock {
+		return new(big.Int).SetBytes(request.hex[5:9])
+	} else if request.OpType() == opTypeEndorsement {
+		return new(big.Int).SetBytes(request.hex[len(request.hex)-4:])
 	}
+	log.Println("Warn: Requested level for unexpected optype", request.OpType())
 	return nil
 }
 
 // OpType of this tezos operation included in the signing request
 func (request *Request) OpType() uint8 {
-	return request.opType
-}
-
-// stripQuotes on either end of the byte array
-func stripQuotes(input []byte) ([]byte, error) {
-	firstQuote, secondQuote := getIndicesOfQuotes(input)
-
-	if firstQuote == -1 || strings.TrimSpace(string(input[:firstQuote])) != "" {
-		return nil, errors.New("request: A signing request must begin with a quote")
-	}
-	if secondQuote == -1 || strings.TrimSpace(string(input[secondQuote+1:])) != "" {
-		return nil, errors.New("request: A signing request must end with a quote")
-	}
-	return input[firstQuote+1 : secondQuote], nil
-}
-
-// getIndices of first and second quotes in the given input byte slice
-func getIndicesOfQuotes(input []byte) (int, int) {
-	quoteByte := []byte("\"")[0]
-	firstQuoteIndex := bytes.IndexByte(input, quoteByte)
-	secondQuoteIndex := bytes.IndexByte(input[firstQuoteIndex+1:], quoteByte)
-	return firstQuoteIndex, firstQuoteIndex + secondQuoteIndex + 1
+	return request.hex[0]
 }
 
 // TzSign this request with the provided Signer and Key
@@ -126,8 +101,8 @@ func (request *Request) TzSign(signer Signer, key *Key) (string, error) {
 	// Ensure ECDSA sig's `S` value is modulo their curve's `n` parameter per BIP 62
 	if key.IsECDSA() {
 		signedMsg = StrictECModN(key, signedMsg)
+		debugln("Signed bytes StrictECModN(hex.EncodeToString(bytes)): ", hex.EncodeToString(signedMsg))
 	}
-	debugln("Signed bytes hex.EncodeToString(bytes): ", hex.EncodeToString(signedMsg))
 
 	// Get the correct signature prefix
 	prefix, err := getSignaturePrefix(key)
@@ -139,7 +114,7 @@ func (request *Request) TzSign(signer Signer, key *Key) (string, error) {
 	signed := b58CheckEncode(prefix, signedMsg)
 
 	// Result should begin with:  p2sig, edsig, spsig1 or sig
-	if signed[2:5] != "sig" && signed[0:3] != "sig" {
+	if !isValidSignatureFormat(key, signed) {
 		return "", fmt.Errorf("request: b58 check encoded result was not correctly formatted: %v", signed)
 	}
 

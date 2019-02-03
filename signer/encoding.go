@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -53,6 +54,21 @@ func getSignaturePrefix(key *Key) ([]byte, error) {
 		return nil, fmt.Errorf("Unknown pkh type %v", string(key.PublicKeyHash[2]))
 	}
 	return prefix, nil
+}
+
+// isValidSignatureFormat ensures a b58 check endoded signature is formatted
+// correctly.  It does *not* verify the cryptographic validity of the signature.
+func isValidSignatureFormat(key *Key, sig string) bool {
+	switch key.Curve() {
+	case curveEd25519:
+		return strings.HasPrefix(sig, "edsig") && len(sig) == 99
+	case curveSecp256k1:
+		return strings.HasPrefix(sig, "spsig1") && len(sig) == 99
+	case curveNistP256:
+		return strings.HasPrefix(sig, "p2sig") && len(sig) == 98
+	default:
+		return strings.HasPrefix(sig, "sig") && len(sig) == 96
+	}
 }
 
 func b58CheckEncode(prefix []byte, bytes []byte) string {
