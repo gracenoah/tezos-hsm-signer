@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"log"
 	"math/big"
 )
 
@@ -8,6 +9,7 @@ const (
 	curveEd25519 = iota + 1
 	curveSecp256k1
 	curveNistP256
+	curveUnknown
 )
 
 var (
@@ -43,5 +45,17 @@ func StrictECModN(key *Key, sig []byte) []byte {
 			S.Sub(nistP256r1Order, S)
 		}
 	}
-	return append(R.Bytes(), S.Bytes()...)
+
+	// Leftpad to 32 bytes
+	rBytes := leftPad(R.Bytes(), 32)
+	sBytes := leftPad(S.Bytes(), 32)
+	return append(rBytes, sBytes...)
+}
+
+// leftPad a byte slice with 0x00 to fit into the specified size
+func leftPad(bytes []byte, length int) []byte {
+	if len(bytes) > length {
+		log.Fatalf("Fatal: Tried to leftpad a %v byte string down to %v bytes\n", len(bytes), length)
+	}
+	return append(make([]byte, length-len(bytes)), bytes...)
 }
