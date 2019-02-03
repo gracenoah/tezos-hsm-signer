@@ -63,12 +63,31 @@ func TestParseEndorsement(t *testing.T) {
 	}
 
 	if signingRequest.OpType() != opTypeEndorsement {
-		log.Println("Error decoding the tx type.  Type: ", signingRequest.OpType())
+		log.Println("Error decoding the op type.  Type: ", signingRequest.OpType())
 		t.Fail()
 	}
 	level, _ := new(big.Int).SetString(testEndorse.Level, 10)
 	if signingRequest.Level().Cmp(level) != 0 {
-		log.Printf("Incorrectly parsed Tx level. Received %v, expecting %v\n", signingRequest.Level(), level)
+		log.Printf("Incorrectly parsed op level. Received %v, expecting %v\n", signingRequest.Level(), level)
+		t.Fail()
+	}
+}
+
+func TestParseBlock(t *testing.T) {
+	signingRequest, err := ParseRequest([]byte(testBlock.Operation))
+
+	if err != nil {
+		log.Println("Error parsing signing request: ", err.Error())
+		t.Fail()
+	}
+
+	if signingRequest.OpType() != opTypeBlock {
+		log.Println("Error decoding the op type.  Type: ", signingRequest.OpType())
+		t.Fail()
+	}
+	level, _ := new(big.Int).SetString(testBlock.Level, 10)
+	if signingRequest.Level().Cmp(level) != 0 {
+		log.Printf("Incorrectly parsed op level. Received %v, expecting %v\n", signingRequest.Level(), level)
 		t.Fail()
 	}
 }

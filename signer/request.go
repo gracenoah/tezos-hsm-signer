@@ -56,7 +56,7 @@ func ParseRequest(raw []byte) (*Request, error) {
 		debugln("Request is a Transaction")
 	case opTypeBlock:
 		request.level = new(big.Int).SetBytes(parsedHex[5:9])
-		debugln("Request is a Block")
+		debugln("Request is a Block at level: ", request.level.String())
 	case opTypeEndorsement:
 		request.level = new(big.Int).SetBytes(parsedHex[len(parsedHex)-4:])
 		debugln("Request is an Endorsement at level: ", request.level.String())

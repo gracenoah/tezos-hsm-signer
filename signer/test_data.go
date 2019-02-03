@@ -61,3 +61,16 @@ var (
 		Level:          "259939",
 	}
 )
+
+// Test Blocks
+var (
+	testBlock = testOperation{
+		// tezos-client endorse for remote-secp256k1
+		OpType:         opTypeBlock,
+		Operation:      "\"018eceda2f00023df201a43530a7ac35eb2b0000c51c29e21b943355242b73d76cfee53dd80908e3e843000000005c562260047d63043ed1c565061d83ef6ce2fed35410549d87350808ee050c25c1a2dc7795000000110000000100000000080000000000435a1af44a000a5e6a5297b6531706fed4438e7e1c134a9e70d239f4c17c3d81411258000000000003dcf012f600\"",
+		HsmResponse:    "428fa4f31d7e6c4ec1a100618abd4ac0c8f100d67fb754226c185c0bf93f60562c60592f5189a0797b23d519d67babd2ad379055a1f639fdad8af1daaf0ba333",
+		SignerResponse: "{\"signature\":\"spsig1EX3PsUAHsQQUYpztfrV5w1GEPsDwJmLBhE2JSUCinH9hBgbL2fwbG73ZYfSB4pJ6aW98gTGh1VMBBU7YcGPQiBmX2o7kM\"}",
+		PublicKeyHash:  "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
+		Level:          "146930",
+	}
+)
