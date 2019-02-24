@@ -45,8 +45,8 @@ func GetFileWatermark(file string) *FileWatermark {
 	return &wm
 }
 
-func loadFromDisk(file string) ([]watermarkEntry, error) {
-	watermarkEntries := []watermarkEntry{}
+func loadFromDisk(file string) ([]*watermarkEntry, error) {
+	watermarkEntries := []*watermarkEntry{}
 
 	// If file doesn't exist, return empty
 	if _, err := os.Stat(file); os.IsNotExist(err) {

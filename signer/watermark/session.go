@@ -8,7 +8,7 @@ import (
 
 // SessionWatermark stores the last-signed level in memory
 type SessionWatermark struct {
-	watermarkEntries []watermarkEntry
+	watermarkEntries []*watermarkEntry
 	mux              sync.Mutex
 }
 
@@ -16,7 +16,7 @@ type SessionWatermark struct {
 func GetSessionWatermark() *SessionWatermark {
 	// Initialize with an empty watermark entry
 	return &SessionWatermark{
-		watermarkEntries: []watermarkEntry{},
+		watermarkEntries: []*watermarkEntry{},
 		mux:              sync.Mutex{},
 	}
 }
@@ -43,12 +43,11 @@ func (mw *SessionWatermark) IsSafeToSign(keyHash string, chainID string, opType 
 			return false
 		}
 	}
-	mw.watermarkEntries = append(mw.watermarkEntries, watermarkEntry{
+	mw.watermarkEntries = append(mw.watermarkEntries, &watermarkEntry{
 		KeyHash: keyHash,
 		ChainID: chainID,
 		OpType:  strconv.Itoa(int(opType)),
 		Level:   level.String(),
 	})
-
 	return true
 }

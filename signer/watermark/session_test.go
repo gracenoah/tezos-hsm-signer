@@ -13,7 +13,7 @@ func assert(t *testing.T, condition bool, errorMessage string) {
 	}
 }
 
-func SameLevel(t *testing.T) {
+func TestSameLevel(t *testing.T) {
 	wm := GetSessionWatermark()
 
 	// Vars
