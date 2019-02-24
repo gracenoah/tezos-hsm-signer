@@ -21,7 +21,7 @@ stages:
 coverage:
   stage: test
   script:
-    - go test -cover $(go list ./... | grep -v /vendor/)
+    - go test $(go list ./... | grep -v /vendor/) -coverprofile cover.out; go tool cover -func cover.out
 
 test:
     stage: test
