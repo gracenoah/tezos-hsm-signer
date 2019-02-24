@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"gitlab.com/polychain/tezos-remote-signer/signer/watermark"
 )
 
 type testSigner struct {
@@ -23,16 +25,13 @@ func (signer *testSigner) Sign(message []byte, key *Key) ([]byte, error) {
 func getTestServer(pkh string) *Server {
 	return &Server{
 		signer: &testSigner{},
-		keyManager: KeyManager{
-			keys: []Key{Key{
-				Name:             "test",
-				PublicKeyHash:    pkh,
-				PublicKey:        "keyhash",
-				LastBakeLevel:    "0",
-				LastEndorseLevel: "0",
-			}},
-		},
-		enableTx: false,
+		keys: []Key{Key{
+			Name:          "test",
+			PublicKeyHash: pkh,
+			PublicKey:     "keyhash",
+		}},
+		enableTx:  false,
+		watermark: watermark.GetSessionWatermark(),
 	}
 }
 
@@ -62,7 +61,7 @@ func TestGetKeys(t *testing.T) {
 	// A valid pkh should return a pk
 	server := getTestServer("tz123")
 
-	path := "/keys/" + server.keyManager.keys[0].PublicKeyHash
+	path := "/keys/" + server.keys[0].PublicKeyHash
 	r := httptest.NewRequest("GET", path, strings.NewReader(""))
 	w := httptest.NewRecorder()
 
@@ -75,7 +74,7 @@ func TestGetKeys(t *testing.T) {
 		log.Println("TestGetKeys: Status code should be 200")
 		t.Fail()
 	}
-	if string(body) != "{\"public_key\":\""+server.keyManager.keys[0].PublicKey+"\"}" {
+	if string(body) != "{\"public_key\":\""+server.keys[0].PublicKey+"\"}" {
 		log.Println("TestGetKeys: GET /keys/key should return a Public Key")
 		t.Fail()
 	}
@@ -128,7 +127,7 @@ func testPost(t *testing.T, server *Server, test testOperation) (*http.Response,
 	server.signer = &testSigner{
 		SignedBytes: signedBytes,
 	}
-	server.keyManager.keys[0].PublicKeyHash = test.PublicKeyHash
+	server.keys[0].PublicKeyHash = test.PublicKeyHash
 
 	// Mock the request
 	postBytes := bytes.NewReader([]byte(test.Operation))

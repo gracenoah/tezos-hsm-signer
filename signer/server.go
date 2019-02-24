@@ -9,18 +9,21 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"gitlab.com/polychain/tezos-remote-signer/signer/watermark"
 )
 
 // Server holds all configuration data from the signer
 type Server struct {
 	signer     Signer
-	keyManager KeyManager
+	keys       []Key
 	bindString string
 	enableTx   bool
+	watermark  watermark.Watermark
 }
 
 // CreateServer returns a newly configured server
-func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString string, enableTx bool, debug bool, lockdir string) *Server {
+func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString string, enableTx bool, debug bool, wm watermark.Watermark) *Server {
 	debugEnabled = debug
 
 	if enableTx {
@@ -28,13 +31,14 @@ func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString 
 	}
 
 	return &Server{
-		keyManager: loadKeyManager(keyfile),
+		keys: loadKeyFile(keyfile),
 		signer: &Hsm{
 			UserPin: hsmPin,
 			LibPath: hsmSo,
 		},
 		enableTx:   enableTx,
 		bindString: serverBindString,
+		watermark:  wm,
 	}
 }
 
@@ -74,7 +78,13 @@ func (server *Server) RouteAuthorizedKeys(w http.ResponseWriter, r *http.Request
 // RouteKeys validates a /key/ request and routes based on HTTP Method
 func (server *Server) RouteKeys(w http.ResponseWriter, r *http.Request) {
 	requestedKeyHash := strings.Split(r.URL.Path, "/")[2]
-	key := server.keyManager.GetKeyFromHash(requestedKeyHash)
+
+	var key *Key
+	for _, k := range server.keys {
+		if k.PublicKeyHash == requestedKeyHash {
+			key = &k
+		}
+	}
 
 	if key == nil {
 		log.Println("Key not found:", requestedKeyHash)
@@ -89,7 +99,6 @@ func (server *Server) RouteKeys(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		server.RouteKeysGET(w, r, key)
 	case "POST":
-		fmt.Println("hihi")
 		server.RouteKeysPOST(w, r, key)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
@@ -114,10 +123,6 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	// Status: 200
 	// mimetype: "application/json"
 
-	// Only ever sign for one key at a time
-	key.Lock()
-	defer key.Unlock()
-
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -129,7 +134,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 	debugln("Received sign request: ", string(body))
 
-	// Parse and sign the message
+	// Parse the message
 	op, err := ParseOperation(body)
 	if err != nil {
 		log.Println("Error parsing signing request: ", err)
@@ -139,7 +144,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 		return
 	}
 
-	// Validate the operation
+	// Fail if the opType is disallowed
 	if op.Type() == opTypeGeneric && !server.enableTx {
 		// Disallow transactions unless specifically enabled
 		log.Println("Error, transaction signing disabled")
@@ -148,17 +153,17 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 		fmt.Fprintf(w, "{\"error\":\"%s\"}", "transactions cannot be signed")
 		return
 	}
-	if !key.IsSafeToSign(op.Type(), op.Level()) {
-		// Never endorse or bake at the same level twice
-		log.Println("Error, this level has already been signed")
+
+	// Fail if not a generic operation and the watermark is unsafe
+	if op.Type() != opTypeGeneric && !server.watermark.IsSafeToSign(key.PublicKeyHash, op.ChainID(), op.Type(), op.Level()) {
+		log.Println("Could not safely sign at this level")
 
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "{\"error\":\"%s\"}", "level cannot be signed")
+		fmt.Fprintf(w, "{\"error\":\"%s\"}", "could not safely sign at this level")
 		return
 	}
 
 	// Sign the operation
-	server.keyManager.SetLastSignedLevel(key, op.Type(), op.Level())
 	signed, err := op.TzSign(server.signer, key)
 	if err != nil {
 		log.Println("Error signing request:", err)

@@ -18,7 +18,7 @@ type Operation struct {
 }
 
 // Watermark of different operations
-// According to: https://gitlab.com/tezos/tezos/blob/master/src/lib_crypto/signature.ml#L523
+// According to: https://gitlab.com/tezos/tezos/blob/master/src/lib_crypto/signature.ml#L525
 const (
 	opTypeBlock       = 0x01
 	opTypeEndorsement = 0x02

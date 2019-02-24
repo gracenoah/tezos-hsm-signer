@@ -4,31 +4,26 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"gitlab.com/polychain/tezos-remote-signer/signer"
+	"gitlab.com/polychain/tezos-remote-signer/signer/watermark"
 )
 
 var (
-	keyfile    = flag.String("keyfile", "./keys.yaml", "Yaml file that identifies keys preloaded in your HSM")
+	// Server Flags
+	bind     = flag.String("bind", "localhost:6732", "Host:Port for the signer to bind to")
+	enableTx = flag.Bool("enable-tx", false, "WARNING: Allows the signer to sign transactions that move funds")
+	keyfile  = flag.String("keyfile", "./keys.yaml", "Yaml file that identifies keys preloaded in your HSM")
+	debug    = flag.Bool("debug", false, "Enable debug mode")
+	// HSM Flags
 	hsmPin     = flag.String("hsm-pin", "", "User PIN to log into the HSM")
 	hsmPinFile = flag.String("hsm-pin-file", "", "Text file containing the user PIN to log into the HSM")
 	hsmSO      = flag.String("hsm-so", "", "Shared object used to access the HSM")
-	bind       = flag.String("bind", "localhost:6732", "Host:Port for the signer to bind to")
-	enableTx   = flag.Bool("enable-tx", false, "WARNING: Allows the signer to sign transactions that move funds.")
-	debug      = flag.Bool("debug", false, "Enable debug mode")
+	// Watermark Flags
+	watermarkType = flag.String("watermark-type", "file", "Location to store high-watermark.  One of \"ignore\", \"session\" or \"file\"")
+	watermarkFile = flag.String("watermark-file", "", "If --watermark-type is \"file\", the file to store high-watermarks in.  Default is ${HOME}/.remote-signer-watermarks")
 )
-
-// getBlockfile to lock the block height.
-func getHeightLockDir() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dir
-}
 
 func getPinFromHsmFile(file string) *string {
 	contents, err := ioutil.ReadFile(file)
@@ -42,14 +37,24 @@ func getPinFromHsmFile(file string) *string {
 func main() {
 	flag.Parse()
 
+	// Process HSM flags
 	if len(*hsmPinFile) > 0 && len(*hsmPin) > 0 {
 		log.Fatal("Only one of --hsm-pin and --hsm-pin-file can be set")
 	}
-
 	if len(*hsmPinFile) > 0 {
 		hsmPin = getPinFromHsmFile(*hsmPinFile)
 	}
 
-	signingServer := signer.CreateServer(*keyfile, *hsmPin, *hsmSO, *bind, *enableTx, *debug, getHeightLockDir())
+	// Process Watermark Flags
+	var wm watermark.Watermark
+	if *watermarkType == "file" {
+		wm = watermark.GetFileWatermark(*watermarkFile)
+	} else if *watermarkType == "session" {
+		wm = watermark.GetSessionWatermark()
+	} else {
+		panic("Invalid --watermark-type provided")
+	}
+
+	signingServer := signer.CreateServer(*keyfile, *hsmPin, *hsmSO, *bind, *enableTx, *debug, wm)
 	signingServer.Serve()
 }
