@@ -3,7 +3,6 @@ package signer
 import (
 	"io/ioutil"
 	"log"
-	"math/big"
 	"strings"
 
 	yaml "gopkg.in/yaml.v2"
@@ -33,13 +32,6 @@ func (key *Key) Curve() int {
 // IsECDSA Curve or EdDSA Curve
 func (key *Key) IsECDSA() bool {
 	return key.Curve() == curveNistP256 || key.Curve() == curveSecp256k1
-}
-
-// getBigInt from the provided string
-func getBigInt(str string) *big.Int {
-	newInt := big.Int{}
-	newInt.SetString(str, 10)
-	return &newInt
 }
 
 func loadKeyFile(keyfile string) []Key {
