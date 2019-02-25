@@ -21,8 +21,9 @@ var (
 	hsmPinFile = flag.String("hsm-pin-file", "", "Text file containing the user PIN to log into the HSM")
 	hsmSO      = flag.String("hsm-so", "", "Shared object used to access the HSM")
 	// Watermark Flags
-	watermarkType = flag.String("watermark-type", "file", "Location to store high-watermark.  One of \"ignore\", \"session\" or \"file\"")
-	watermarkFile = flag.String("watermark-file", "", "If --watermark-type is \"file\", the file to store high-watermarks in.  Default is ${HOME}/.remote-signer-watermarks")
+	watermarkType  = flag.String("watermark-type", "file", "Location to store high-watermark.  One of \"ignore\", \"session\", \"file\" or \"dynamodb\"")
+	watermarkTable = flag.String("watermark-table", "tezos-remote-signer", "If --watermark-type is \"dynamodb\", the DynamoDB table to store high-watermarks in")
+	watermarkFile  = flag.String("watermark-file", "", "If --watermark-type is \"file\", the file to store high-watermarks in.  Default is ${HOME}/.remote-signer-watermarks")
 )
 
 func getPinFromHsmFile(file string) *string {
@@ -47,10 +48,14 @@ func main() {
 
 	// Process Watermark Flags
 	var wm watermark.Watermark
-	if *watermarkType == "file" {
-		wm = watermark.GetFileWatermark(*watermarkFile)
+	if *watermarkType == "ignore" {
+		wm = watermark.GetIgnoreWatermark()
 	} else if *watermarkType == "session" {
 		wm = watermark.GetSessionWatermark()
+	} else if *watermarkType == "file" {
+		wm = watermark.GetFileWatermark(*watermarkFile)
+	} else if *watermarkType == "dynamodb" {
+		wm = watermark.GetDynamoWatermark(*watermarkTable)
 	} else {
 		panic("Invalid --watermark-type provided")
 	}
