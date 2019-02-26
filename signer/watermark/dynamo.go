@@ -45,6 +45,7 @@ func (mw *DynamoWatermark) getCurrentLevel(keyHash string, chainID string, opTyp
 		Key: map[string]*dynamodb.AttributeValue{
 			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opType))},
 		},
+		ConsistentRead: aws.Bool(true),
 	})
 	if err != nil {
 		// There was an error retrieving the dynamo item
