@@ -94,6 +94,7 @@ func (op *Operation) Level() *big.Int {
 // TzSign this operation with the provided Signer and Key
 func (op *Operation) TzSign(signer Signer, key *Key) (string, error) {
 	msg := op.Hex()
+	debugln("Signing for key: ", key.PublicKeyHash)
 	debugln("About to sign raw bytes hex.EncodeToString(bytes): ", hex.EncodeToString(msg))
 
 	// Take the 256 bit (32 Byte) Blake2b Hash of the operation

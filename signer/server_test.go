@@ -29,6 +29,10 @@ func getTestServer(pkh string) *Server {
 			Name:          "test",
 			PublicKeyHash: pkh,
 			PublicKey:     "keyhash",
+		}, Key{
+			Name:          "test2",
+			PublicKeyHash: pkh + "2",
+			PublicKey:     "keyhash2",
 		}},
 		enableTx:  false,
 		watermark: watermark.GetSessionWatermark(),
@@ -157,7 +161,7 @@ func compare(t *testing.T, testName string, statusReceived int, statusExpected i
 }
 
 func TestPostTx(t *testing.T) {
-	server := getTestServer("")
+	server := getTestServer("tz123")
 
 	server.enableTx = true
 	resp, body := testPost(t, server, testSecp256k1Tx)
@@ -173,21 +177,21 @@ func TestPostTx(t *testing.T) {
 }
 
 func TestPostEndorse(t *testing.T) {
-	server := getTestServer("")
+	server := getTestServer("tz123")
 	// Endorsing at the same level twice should fail
 	resp, body := testPost(t, server, testEndorseLevel259938)
 	compare(t, "Secp256k1 Endorse Same Level #1", resp.StatusCode, http.StatusOK, body, testEndorseLevel259938.SignerResponse)
 	resp, body = testPost(t, server, testEndorseLevel259938)
 	compare(t, "Secp256k1 Endorse Same Level #2", resp.StatusCode, http.StatusForbidden, body, testEndorseLevel259938.SignerResponse)
 
-	server = getTestServer("")
+	server = getTestServer("tz123")
 	// Endorsing at the same level twice should fail
 	resp, body = testPost(t, server, testEndorseLevel259939)
 	compare(t, "Secp256k1 Endorse Lower Level #1", resp.StatusCode, http.StatusOK, body, testEndorseLevel259939.SignerResponse)
 	resp, body = testPost(t, server, testEndorseLevel259938)
 	compare(t, "Secp256k1 Endorse Lower Level #2", resp.StatusCode, http.StatusForbidden, body, testEndorseLevel259938.SignerResponse)
 
-	server = getTestServer("")
+	server = getTestServer("tz123")
 	// Endorsing at increasing levels should succeed
 	resp, body = testPost(t, server, testEndorseLevel259938)
 	compare(t, "Secp256k1 Endorse Lower Level #1", resp.StatusCode, http.StatusOK, body, testEndorseLevel259938.SignerResponse)

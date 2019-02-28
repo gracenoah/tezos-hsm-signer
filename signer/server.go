@@ -83,6 +83,7 @@ func (server *Server) RouteKeys(w http.ResponseWriter, r *http.Request) {
 	for _, k := range server.keys {
 		if k.PublicKeyHash == requestedKeyHash {
 			key = &k
+			break
 		}
 	}
 
