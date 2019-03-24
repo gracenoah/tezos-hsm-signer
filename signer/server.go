@@ -146,7 +146,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Fail if the opType is disallowed
-	if op.Type() == opTypeGeneric && !server.enableTx {
+	if op.Watermark() == opWatermarkGeneric && !server.enableTx {
 		// Disallow transactions unless specifically enabled
 		log.Println("Error, transaction signing disabled")
 
@@ -156,7 +156,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Fail if not a generic operation and the watermark is unsafe
-	if op.Type() != opTypeGeneric && !server.watermark.IsSafeToSign(key.PublicKeyHash, op.ChainID(), op.Type(), op.Level()) {
+	if op.Watermark() != opWatermarkGeneric && !server.watermark.IsSafeToSign(key.PublicKeyHash, op.ChainID(), op.Watermark(), op.Level()) {
 		log.Println("Could not safely sign at this level")
 
 		w.WriteHeader(http.StatusForbidden)

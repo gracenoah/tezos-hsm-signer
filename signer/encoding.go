@@ -85,3 +85,9 @@ func b58CheckEncode(prefix []byte, bytes []byte) string {
 	encoded := base58.Encode(finalMessage)
 	return encoded
 }
+
+// PubkeyHashToByteString strips the prefix and checksum bytes,
+// returning only the pubkeyhash bytes
+func PubkeyHashToByteString(pubkeyhash string) string {
+	return hex.EncodeToString(base58.Decode(pubkeyhash)[3:23])
+}

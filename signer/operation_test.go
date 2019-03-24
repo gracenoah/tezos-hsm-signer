@@ -14,7 +14,7 @@ func TestParseTx(t *testing.T) {
 		t.Fail()
 	}
 
-	if op.Type() != opTypeGeneric {
+	if op.Watermark() != opWatermarkGeneric {
 		log.Println("Error decoding the tx type")
 		t.Fail()
 	}
@@ -28,8 +28,8 @@ func testParse(t *testing.T, test testOperation, id string) {
 		t.Fail()
 	}
 
-	if op.Type() != test.OpType {
-		log.Printf("%v: Error decoding the op type.  Type: %v\n", id, op.Type())
+	if op.Watermark() != test.OpWatermark {
+		log.Printf("%v: Error decoding the op type.  Type: %v\n", id, op.Watermark())
 		t.Fail()
 	}
 	level, _ := new(big.Int).SetString(test.Level, 10)
@@ -51,7 +51,6 @@ func testParse(t *testing.T, test testOperation, id string) {
 
 func TestParseEndorsement(t *testing.T) {
 	testParse(t, testEndorse, "Endorse")
-
 }
 
 func TestParseBlock(t *testing.T) {

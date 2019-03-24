@@ -7,8 +7,6 @@ import (
 	"log"
 	"math/big"
 	"strings"
-
-	"golang.org/x/crypto/blake2b"
 )
 
 // Operation parses and validates an arbitrary tz request
@@ -20,9 +18,9 @@ type Operation struct {
 // Watermark of different operations
 // According to: https://gitlab.com/tezos/tezos/blob/master/src/lib_crypto/signature.ml#L525
 const (
-	opTypeBlock       = 0x01
-	opTypeEndorsement = 0x02
-	opTypeGeneric     = 0x03
+	opWatermarkBlock       = 0x01
+	opWatermarkEndorsement = 0x02
+	opWatermarkGeneric     = 0x03
 )
 
 // ParseOperation parses a raw byte string into a meaningful tz operation
@@ -47,15 +45,15 @@ func ParseOperation(opBytes []byte) (*Operation, error) {
 	}
 
 	// Validate and print debug statements
-	switch op.Type() {
-	case opTypeGeneric:
+	switch op.Watermark() {
+	case opWatermarkGeneric:
 		debugln("Operation is Generic.  Possibly a Transaction")
-	case opTypeBlock:
+	case opWatermarkBlock:
 		debugln("Operation is a Block at level: ", op.Level().String())
-	case opTypeEndorsement:
+	case opWatermarkEndorsement:
 		debugln("Operation is an Endorsement at level: ", op.Level().String())
 	default:
-		return nil, fmt.Errorf("Operation: Unsupported Operation Type: %v", op.Type())
+		return nil, fmt.Errorf("Operation: Unsupported Operation Watermark: %v", op.Watermark())
 	}
 
 	return &op, nil
@@ -68,8 +66,8 @@ func (op *Operation) Hex() []byte {
 	return hexCopy
 }
 
-// Type of this tezos operation included in the operation
-func (op *Operation) Type() uint8 {
+// Watermark of this tezos operation included in the operation
+func (op *Operation) Watermark() uint8 {
 	return op.hex[0]
 }
 
@@ -82,50 +80,11 @@ func (op *Operation) ChainID() string {
 
 // Level returns a copy of the level, if one can be parsed from this operation
 func (op *Operation) Level() *big.Int {
-	if op.Type() == opTypeBlock {
+	if op.Watermark() == opWatermarkBlock {
 		return new(big.Int).SetBytes(op.hex[5:9])
-	} else if op.Type() == opTypeEndorsement {
+	} else if op.Watermark() == opWatermarkEndorsement {
 		return new(big.Int).SetBytes(op.hex[len(op.hex)-4:])
 	}
-	log.Println("Warn: Requested level for unexpected type", op.Type())
+	log.Println("Warn: Requested level for unexpected watermark", op.Watermark())
 	return nil
-}
-
-// TzSign this operation with the provided Signer and Key
-func (op *Operation) TzSign(signer Signer, key *Key) (string, error) {
-	msg := op.Hex()
-	debugln("Signing for key: ", key.PublicKeyHash)
-	debugln("About to sign raw bytes hex.EncodeToString(bytes): ", hex.EncodeToString(msg))
-
-	// Take the 256 bit (32 Byte) Blake2b Hash of the operation
-	digest := blake2b.Sum256(msg)
-
-	// Sign
-	signedMsg, err := signer.Sign(digest[:], key)
-	if err != nil {
-		return "", err
-	}
-	debugln("Signed bytes hex.EncodeToString(bytes): ", hex.EncodeToString(signedMsg))
-
-	// Ensure ECDSA sig's `S` value is modulo their curve's `n` parameter per BIP 62
-	if key.IsECDSA() {
-		signedMsg = StrictECModN(key, signedMsg)
-		debugln("Signed bytes StrictECModN(hex.EncodeToString(bytes)): ", hex.EncodeToString(signedMsg))
-	}
-
-	// Get the correct signature prefix
-	prefix, err := getSignaturePrefix(key)
-	if err != nil {
-		return "", err
-	}
-
-	// b58 Check Encode the result
-	signed := b58CheckEncode(prefix, signedMsg)
-
-	// Result should begin with:  p2sig, edsig, spsig1 or sig
-	if !isValidSignatureFormat(key, signed) {
-		return "", fmt.Errorf("b58 check encoded result was not correctly formatted: %v", signed)
-	}
-
-	return signed, nil
 }
