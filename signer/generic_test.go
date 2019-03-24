@@ -44,7 +44,6 @@ func testParseGenericOperation(t *testing.T, test *testGenericOperation) {
 		t.Fail()
 	}
 
-	log.Println(PubkeyHashToByteString(test.Source))
 	if generic.TransactionSource() != PubkeyHashToByteString(test.Source) {
 		log.Printf("[Generic Test - %v] Source mismatch. Expected %v but received %v\n", test.Name, test.Source, generic.TransactionSource())
 		t.Fail()

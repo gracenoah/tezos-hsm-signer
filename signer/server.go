@@ -18,15 +18,15 @@ type Server struct {
 	signer     Signer
 	keys       []Key
 	bindString string
-	enableTx   bool
+	filter     OperationFilter
 	watermark  watermark.Watermark
 }
 
 // CreateServer returns a newly configured server
-func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString string, enableTx bool, debug bool, wm watermark.Watermark) *Server {
+func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString string, opFilter OperationFilter, debug bool, wm watermark.Watermark) *Server {
 	debugEnabled = debug
 
-	if enableTx {
+	if opFilter.EnableGeneric || opFilter.EnableTx {
 		log.Println("WARNING: Transaction signing is enabled.  Use with caution.")
 	}
 
@@ -36,7 +36,7 @@ func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString 
 			UserPin: hsmPin,
 			LibPath: hsmSo,
 		},
-		enableTx:   enableTx,
+		filter:     opFilter,
 		bindString: serverBindString,
 		watermark:  wm,
 	}
@@ -146,12 +146,12 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Fail if the opType is disallowed
-	if op.Watermark() == opWatermarkGeneric && !server.enableTx {
+	if !server.filter.IsAllowed(op) {
 		// Disallow transactions unless specifically enabled
-		log.Println("Error, transaction signing disabled")
+		log.Println("Error, operation is blocked by filter")
 
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprintf(w, "{\"error\":\"%s\"}", "transactions cannot be signed")
+		fmt.Fprintf(w, "{\"error\":\"%s\"}", "operation blocked by filter")
 		return
 	}
 

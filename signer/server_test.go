@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -34,7 +35,9 @@ func getTestServer(pkh string) *Server {
 			PublicKeyHash: pkh + "2",
 			PublicKey:     "keyhash2",
 		}},
-		enableTx:  false,
+		filter: OperationFilter{
+			EnableTx: false,
+		},
 		watermark: watermark.GetSessionWatermark(),
 	}
 }
@@ -163,17 +166,43 @@ func compare(t *testing.T, testName string, statusReceived int, statusExpected i
 func TestPostTx(t *testing.T) {
 	server := getTestServer("tz123")
 
-	server.enableTx = true
+	server.filter.EnableTx = true
 	resp, body := testPost(t, server, testSecp256k1Tx)
 	compare(t, "Secp256k1 Tx Enabled", resp.StatusCode, http.StatusOK, body, testSecp256k1Tx.SignerResponse)
 	resp, body = testPost(t, server, testP256Tx)
 	compare(t, "p256 Tx Enabled", resp.StatusCode, http.StatusOK, body, testP256Tx.SignerResponse)
 
-	server.enableTx = false
+	server.filter.EnableTx = false
 	resp, body = testPost(t, server, testSecp256k1Tx)
 	compare(t, "Secp256k1 Tx Disabled", resp.StatusCode, http.StatusForbidden, body, testSecp256k1Tx.SignerResponse)
 	resp, body = testPost(t, server, testP256Tx)
 	compare(t, "P256 Tx Disabled", resp.StatusCode, http.StatusForbidden, body, testP256Tx.SignerResponse)
+}
+
+func TestPostTxWhitelist(t *testing.T) {
+	server := getTestServer("tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m")
+
+	server.filter.EnableTx = true
+	server.filter.TxWhitelistAddresses = []string{"tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m"}
+	resp, body := testPost(t, server, testSecp256k1Tx)
+	compare(t, "Secp256k1 On Whitelist", resp.StatusCode, http.StatusOK, body, testSecp256k1Tx.SignerResponse)
+
+	server.filter.EnableTx = false
+	server.filter.TxWhitelistAddresses = []string{"tz3fNgiRyEZeXD5eh6rEocSp8PBzii2w38Ku"}
+	resp, body = testPost(t, server, testSecp256k1Tx)
+	compare(t, "Secp256k1 Off Whitelist", resp.StatusCode, http.StatusForbidden, body, testSecp256k1Tx.SignerResponse)
+}
+
+func TestPostTxLimit(t *testing.T) {
+	server := getTestServer("tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m")
+
+	server.filter.EnableTx = true
+	server.filter.TxDailyMax = new(big.Int).SetInt64(1500000)
+	resp, body := testPost(t, server, testSecp256k1Tx)
+	compare(t, "Secp256k1 Under Amount", resp.StatusCode, http.StatusOK, body, testSecp256k1Tx.SignerResponse)
+
+	resp, body = testPost(t, server, testSecp256k1Tx)
+	compare(t, "Secp256k1 Over  Amount", resp.StatusCode, http.StatusForbidden, body, testSecp256k1Tx.SignerResponse)
 }
 
 func TestPostEndorse(t *testing.T) {
