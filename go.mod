@@ -1,4 +1,4 @@
-module gitlab.com/polychain/tezos-remote-signer
+module gitlab.com/polychain/tezos-hsm-signer
 
 require (
 	github.com/aws/aws-sdk-go v1.17.4 // indirect

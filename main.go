@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"strings"
 
-	"gitlab.com/polychain/tezos-remote-signer/signer"
-	"gitlab.com/polychain/tezos-remote-signer/signer/watermark"
+	"gitlab.com/polychain/tezos-hsm-signer/signer"
+	"gitlab.com/polychain/tezos-hsm-signer/signer/watermark"
 )
 
 var (
@@ -28,8 +28,8 @@ var (
 	hsmSO      = flag.String("hsm-so", "", "Shared object used to access the HSM")
 	// Watermark Flags
 	watermarkType  = flag.String("watermark-type", "file", "Location to store high-watermark.  One of \"ignore\", \"session\", \"file\" or \"dynamodb\"")
-	watermarkTable = flag.String("watermark-table", "tezos-remote-signer", "If --watermark-type is \"dynamodb\", the DynamoDB table to store high-watermarks in")
-	watermarkFile  = flag.String("watermark-file", "", "If --watermark-type is \"file\", the file to store high-watermarks in.  Default is ${HOME}/.remote-signer-watermarks")
+	watermarkTable = flag.String("watermark-table", "tezos-hsm-signer", "If --watermark-type is \"dynamodb\", the DynamoDB table to store high-watermarks in")
+	watermarkFile  = flag.String("watermark-file", "", "If --watermark-type is \"file\", the file to store high-watermarks in.  Default is ${HOME}/.hsm-signer-watermarks")
 )
 
 func getPinFromHsmFile(file string) *string {

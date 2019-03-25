@@ -1,7 +1,7 @@
 Tezos Remote Signer
 ===================
 
-![pipeline status](https://gitlab.com/polychain/tezos-remote-signer/badges/master/pipeline.svg) ![coverage](https://gitlab.com/polychain/tezos-remote-signer/badges/master/coverage.svg)
+![pipeline status](https://gitlab.com/polychain/tezos-hsm-signer/badges/master/pipeline.svg) ![coverage](https://gitlab.com/polychain/tezos-hsm-signer/badges/master/coverage.svg)
 
 Implement the Tezos HTTP signing interface, backed by an HSM over PKCS#11.
 
@@ -19,7 +19,7 @@ go run main.go  \
 
 # Import keys to your client managed by this signer
 tezos-client import secret key remote http://localhost:6732/tz...
-# Sign an operation with the remote signer
+# Sign an operation with the hsm signer
 tezos-client transfer 1 from remote to remote
 ```
 

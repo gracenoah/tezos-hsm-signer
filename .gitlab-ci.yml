@@ -4,7 +4,7 @@ services:
   - docker:dind
 
 variables:
-  REPO_NAME: gitlab.com/polychain/tezos-remote-signer
+  REPO_NAME: gitlab.com/polychain/tezos-hsm-signer
   CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
@@ -34,10 +34,10 @@ test:
 build-binary:
     stage: build
     script:
-      - GOOS=linux go build -race -o $CI_PROJECT_DIR/tezos-remote-signer
+      - GOOS=linux go build -race -o $CI_PROJECT_DIR/tezos-hsm-signer
     artifacts:
       paths:
-        - tezos-remote-signer
+        - tezos-hsm-signer
  
 build-image:
     image: docker:stable

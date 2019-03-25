@@ -22,7 +22,7 @@ type FileWatermark struct {
 func GetFileWatermark(file string) *FileWatermark {
 	// If file is not set, create a new file in our home directory
 	if len(file) == 0 {
-		file = path.Join(os.Getenv("HOME"), ".remote-signer-watermarks")
+		file = path.Join(os.Getenv("HOME"), ".hsm-signer-watermarks")
 	}
 	// Load from disk
 	watermarkEntries, err := loadFromDisk(file)
