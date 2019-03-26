@@ -112,6 +112,19 @@ func TestParseTransactions(t *testing.T) {
 		Amount:       new(big.Int).SetInt64(0),
 		Destination:  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx",
 	})
+	testParseGenericOperation(t, &testGenericOperation{
+		Name:         "KT Address",
+		Kind:         opKindTransaction,
+		Operation:    "\"037072fa916732ed788ab030ca81714956fea286521fc0ead7ad533868e0f0308408000154f5d8f71ce18f9f05bb885a4120e64c667bc1b4f809ca69d84f00c0843d016e7c23cc06c7b0743256f65e34d5b0f7c91e4eb20000\"",
+		Source:       "tz2G4TwEbsdFrJmApAxJ1vdQGmADnBp95n9m",
+		Fee:          new(big.Int).SetInt64(1272),
+		Counter:      new(big.Int).SetInt64(13514),
+		GasLimit:     new(big.Int).SetInt64(10200),
+		StorageLimit: new(big.Int).SetInt64(0),
+		Amount:       new(big.Int).SetInt64(1000000),
+		Destination:  "KT1JexcFezMnUAaWmvUGY99jwTA4jcKiUgFp",
+	})
+
 }
 
 func TestParseProposal(t *testing.T) {

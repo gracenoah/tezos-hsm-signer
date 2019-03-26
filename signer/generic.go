@@ -103,7 +103,7 @@ func (op *GenericOperation) TransactionDestination() string {
 	start := len(op.hex) - 21
 	end := len(op.hex) - 1
 	if start-numberIndex != 2 {
-		log.Println("Warning: Incorrect offset between numbers and destination.  Unsure where we're sending.")
+		log.Println("[WARN] Incorrect offset between numbers and destination.  Unsure where we're sending.")
 		return ""
 	}
 	return hex.EncodeToString(op.hex[start:end])
