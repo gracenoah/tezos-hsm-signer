@@ -13,7 +13,7 @@ type GenericOperation struct {
 
 // Kind of different types of generic operations
 // Defined in gitlb.com/tezos/tezos:
-// > src/proto_003_PsddFKi3/lib_protocol/src/operation_repr.ml
+// https://gitlab.com/tezos/tezos/blob/mainnet/src/proto_003_PsddFKi3/lib_protocol/src/operation_repr.ml
 const (
 	opKindProposals   = 0x05
 	opKindBallot      = 0x06
@@ -113,35 +113,6 @@ func (op *GenericOperation) TransactionValue() *big.Int {
 	total.Add(total, op.TransactionAmount())
 	total.Add(total, op.TransactionGasLimit())
 	total.Add(total, op.TransactionStorageLimit())
-	return total
-}
-
-// ProposalValue is the total value of all XTZ that could be burned in this tx
-func (op *GenericOperation) ProposalValue() *big.Int {
-	if op.Kind() != opKindTransaction {
-		return nil
-	}
-	total := &big.Int{}
-	// Proposals use the same object as Transactions so we can reuse these
-	// per: src/proto_003_PsddFKi3/lib_protocol/src/operation_repr.ml
-	total.Add(total, op.TransactionFee())
-	total.Add(total, op.TransactionGasLimit())
-	total.Add(total, op.TransactionStorageLimit())
-	return total
-}
-
-// BallotValue is the total value of all XTZ that could be burned in this tx
-func (op *GenericOperation) BallotValue() *big.Int {
-	if op.Kind() != opKindTransaction {
-		return nil
-	}
-	total := &big.Int{}
-	// TODO: Parse the data structure used to encode fees
-	// per: src/proto_003_PsddFKi3/lib_protocol/src/operation_repr.ml
-	// total.Add(total, ...)
-	// total.Add(total, ...)
-	// total.Add(total, ...)
-	log.Println("TODO: NOT YET IMPLEMENTED")
 	return total
 }
 

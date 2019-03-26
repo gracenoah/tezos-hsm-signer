@@ -16,14 +16,9 @@ type OperationFilter struct {
 	TxDailyMax           *big.Int
 
 	// Keep track of daily max withdrawals
-	dailyTxMaxKey       string
-	dailyTxMaxCounter   *big.Int
-	dailyVoteMaxKey     string
-	dailyVoteMaxCounter *big.Int
+	dailyTxMaxKey     string
+	dailyTxMaxCounter *big.Int
 }
-
-// No more than 100 XTZ spent per day voting
-const maxDailyVotingValue = 100 * 1000000
 
 // IsAllowed by this filter?
 func (filter *OperationFilter) IsAllowed(op *Operation) bool {
@@ -36,10 +31,10 @@ func (filter *OperationFilter) IsAllowed(op *Operation) bool {
 			return filter.isWhitelisted(generic) && filter.authorizeTxAmount(generic.TransactionValue())
 		}
 		if filter.EnableVoting && (generic.Kind() == opKindBallot) {
-			return filter.authorizeVoteAmount(generic.BallotValue())
+			return true
 		}
 		if filter.EnableVoting && (generic.Kind() == opKindProposals) {
-			return filter.authorizeVoteAmount(generic.ProposalValue())
+			return true
 		}
 		return false
 	}
@@ -77,19 +72,4 @@ func (filter *OperationFilter) authorizeTxAmount(value *big.Int) bool {
 	}
 	filter.dailyTxMaxCounter.Add(filter.dailyTxMaxCounter, value)
 	return filter.dailyTxMaxCounter.Cmp(filter.TxDailyMax) == -1
-}
-
-// AuthorizeVoteAmount for brodcast votes.  Fails if this amount would push us
-// over 100 XTZ daily limit.
-func (filter *OperationFilter) authorizeVoteAmount(value *big.Int) bool {
-
-	now := time.Now()
-	key := fmt.Sprintf("%v-%v", now.Year(), now.YearDay())
-	// Reset the counter when we're in a new day
-	if filter.dailyVoteMaxKey != key {
-		filter.dailyVoteMaxKey = key
-		filter.dailyVoteMaxCounter = new(big.Int).SetInt64(0)
-	}
-	filter.dailyVoteMaxCounter.Add(filter.dailyVoteMaxCounter, value)
-	return filter.dailyVoteMaxCounter.Cmp(new(big.Int).SetInt64(maxDailyVotingValue)) == -1
 }

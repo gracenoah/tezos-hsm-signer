@@ -112,7 +112,25 @@ func TestParseTransactions(t *testing.T) {
 		Amount:       new(big.Int).SetInt64(0),
 		Destination:  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx",
 	})
+}
 
+func TestParseProposal(t *testing.T) {
+	op, _ := ParseOperation([]byte("\"03ce69c5713dac3537254e7be59759cf59c15abd530d10501ccf9028a5786314cf05008fb5cea62d147c696afd9a93dbce962f4c8a9c910000000a00000020ab22e46e7872aa13e366e455bb4f5dbede856ab0864e1da7e122554579ee71f8\""))
+	generic := GetGenericOperation(op)
+	// Verify Each Field
+	if generic.Kind() != opKindProposals {
+		log.Printf("[Proposal Test] Kind mismatch. Expected %v but received %v\n", opKindProposals, generic.Kind())
+		t.Fail()
+	}
+}
+func TestParseBallot(t *testing.T) {
+	op, _ := ParseOperation([]byte("\"03ce69c5713dac3537254e7be59759cf59c15abd530d10501ccf9028a5786314cf0600531ab5764a29f77c5d40b80a5da45c84468f08a10000000bab22e46e7872aa13e366e455bb4f5dbede856ab0864e1da7e122554579ee71f800\""))
+	generic := GetGenericOperation(op)
+	// Verify Each Field
+	if generic.Kind() != opKindBallot {
+		log.Printf("[Proposal Test] Kind mismatch. Expected %v but received %v\n", opKindProposals, generic.Kind())
+		t.Fail()
+	}
 }
 
 func testParseBytes(t *testing.T, bytes string, expect int64) {
