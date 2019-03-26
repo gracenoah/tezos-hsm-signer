@@ -15,12 +15,12 @@ type Operation struct {
 	hex []byte
 }
 
-// Watermark of different operations
+// Magic Bytes of different operations
 // According to: https://gitlab.com/tezos/tezos/blob/master/src/lib_crypto/signature.ml#L525
 const (
-	opWatermarkBlock       = 0x01
-	opWatermarkEndorsement = 0x02
-	opWatermarkGeneric     = 0x03
+	opMagicByteBlock       = 0x01
+	opMagicByteEndorsement = 0x02
+	opMagicByteGeneric     = 0x03
 )
 
 // ParseOperation parses a raw byte string into a meaningful tz operation
@@ -45,15 +45,15 @@ func ParseOperation(opBytes []byte) (*Operation, error) {
 	}
 
 	// Validate and print debug statements
-	switch op.Watermark() {
-	case opWatermarkGeneric:
+	switch op.MagicByte() {
+	case opMagicByteGeneric:
 		debugln("Operation is Generic.  Possibly a Transaction")
-	case opWatermarkBlock:
+	case opMagicByteBlock:
 		debugln("Operation is a Block at level: ", op.Level().String())
-	case opWatermarkEndorsement:
+	case opMagicByteEndorsement:
 		debugln("Operation is an Endorsement at level: ", op.Level().String())
 	default:
-		return nil, fmt.Errorf("Operation: Unsupported Operation Watermark: %v", op.Watermark())
+		return nil, fmt.Errorf("Operation: Unsupported Operation MagicByte: %v", op.MagicByte())
 	}
 
 	return &op, nil
@@ -66,8 +66,8 @@ func (op *Operation) Hex() []byte {
 	return hexCopy
 }
 
-// Watermark of this tezos operation included in the operation
-func (op *Operation) Watermark() uint8 {
+// MagicByte of this tezos operation included in the operation
+func (op *Operation) MagicByte() uint8 {
 	return op.hex[0]
 }
 
@@ -80,11 +80,11 @@ func (op *Operation) ChainID() string {
 
 // Level returns a copy of the level, if one can be parsed from this operation
 func (op *Operation) Level() *big.Int {
-	if op.Watermark() == opWatermarkBlock {
+	if op.MagicByte() == opMagicByteBlock {
 		return new(big.Int).SetBytes(op.hex[5:9])
-	} else if op.Watermark() == opWatermarkEndorsement {
+	} else if op.MagicByte() == opMagicByteEndorsement {
 		return new(big.Int).SetBytes(op.hex[len(op.hex)-4:])
 	}
-	log.Println("Warn: Requested level for unexpected watermark", op.Watermark())
+	log.Println("Warn: Requested level for unexpected magic byte", op.MagicByte())
 	return nil
 }

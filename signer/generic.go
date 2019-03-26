@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-// GenericOperation parses an operation with a generic watermark byte
+// GenericOperation parses an operation with a generic magic byte
 type GenericOperation struct {
 	hex []byte
 }
@@ -23,7 +23,7 @@ const (
 
 // GetGenericOperation to parse specific Generic fields
 func GetGenericOperation(op *Operation) *GenericOperation {
-	if op.Watermark() != opWatermarkGeneric {
+	if op.MagicByte() != opMagicByteGeneric {
 		return nil
 	}
 	return &GenericOperation{
@@ -134,7 +134,8 @@ func (op *GenericOperation) parseSerializedNumberOffset(offset int) *big.Int {
 }
 
 // Parse a numbers starting at the provided index.  Return the number and
-// the index of the next byte in the operation.
+// the index of the next byte in the operation.  Follows the recursive reading
+// fn @ https://gitlab.com/tezos/tezos/blob/master/src/lib_data_encoding/binary_reader.ml#L174
 func (op *GenericOperation) parseSerializedNumber(startIndex int) (*big.Int, int) {
 	if len(op.hex) <= startIndex {
 		log.Println("[WARN] Ran into end of bytes while parsing.  Returning zero.")

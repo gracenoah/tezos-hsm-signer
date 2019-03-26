@@ -9,7 +9,7 @@ import (
 type Watermark interface {
 	// IsSafeToSign returns true if the provided (key, chainID, opType) tuple has
 	// not yet been signed at this or greater levels
-	IsSafeToSign(keyHash string, chainID string, opType uint8, level *big.Int) bool
+	IsSafeToSign(keyHash string, chainID string, opMagicByte uint8, level *big.Int) bool
 }
 
 // watermarkEntry stores our locks

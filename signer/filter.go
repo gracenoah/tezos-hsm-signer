@@ -22,7 +22,7 @@ type OperationFilter struct {
 
 // IsAllowed by this filter?
 func (filter *OperationFilter) IsAllowed(op *Operation) bool {
-	if op.Watermark() == opWatermarkGeneric {
+	if op.MagicByte() == opMagicByteGeneric {
 		generic := GetGenericOperation(op)
 		if filter.EnableGeneric {
 			return true

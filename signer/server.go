@@ -156,7 +156,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Fail if not a generic operation and the watermark is unsafe
-	if op.Watermark() != opWatermarkGeneric && !server.watermark.IsSafeToSign(key.PublicKeyHash, op.ChainID(), op.Watermark(), op.Level()) {
+	if op.MagicByte() != opMagicByteGeneric && !server.watermark.IsSafeToSign(key.PublicKeyHash, op.ChainID(), op.MagicByte(), op.Level()) {
 		log.Println("Could not safely sign at this level")
 
 		w.WriteHeader(http.StatusForbidden)

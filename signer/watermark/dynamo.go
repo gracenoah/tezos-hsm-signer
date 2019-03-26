@@ -33,17 +33,17 @@ func GetDynamoWatermark(table string) Watermark {
 }
 
 // getDynamoKey used as the hash identifier of each entry
-func getDynamoKey(keyHash string, chainID string, opType uint8) string {
-	return fmt.Sprintf("%v-%v-%v", keyHash, chainID, opType)
+func getDynamoKey(keyHash string, chainID string, opMagicByte uint8) string {
+	return fmt.Sprintf("%v-%v-%v", keyHash, chainID, opMagicByte)
 }
 
 // getCurrentLevel watermarked in Dynamo
-func (mw *DynamoWatermark) getCurrentLevel(keyHash string, chainID string, opType uint8) (*big.Int, error) {
+func (mw *DynamoWatermark) getCurrentLevel(keyHash string, chainID string, opMagicByte uint8) (*big.Int, error) {
 	// Get Item
 	result, err := mw.dynamodb.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String(mw.table),
 		Key: map[string]*dynamodb.AttributeValue{
-			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opType))},
+			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opMagicByte))},
 		},
 		ConsistentRead: aws.Bool(true),
 	})
@@ -60,11 +60,11 @@ func (mw *DynamoWatermark) getCurrentLevel(keyHash string, chainID string, opTyp
 }
 
 // putItem for the first time into Dynamo
-func (mw *DynamoWatermark) putItem(keyHash string, chainID string, opType uint8, level *big.Int) error {
+func (mw *DynamoWatermark) putItem(keyHash string, chainID string, opMagicByte uint8, level *big.Int) error {
 	_, err := mw.dynamodb.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(mw.table),
 		Item: map[string]*dynamodb.AttributeValue{
-			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opType))},
+			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opMagicByte))},
 			"Level":      {S: aws.String(level.String())},
 		},
 		ConditionExpression: aws.String("attribute_not_exists(KeyChainOp)"),
@@ -73,12 +73,12 @@ func (mw *DynamoWatermark) putItem(keyHash string, chainID string, opType uint8,
 }
 
 // updateItem with a new level in dynamo
-func (mw *DynamoWatermark) updateItem(keyHash string, chainID string, opType uint8, currentLevel *big.Int, newLevel *big.Int) error {
+func (mw *DynamoWatermark) updateItem(keyHash string, chainID string, opMagicByte uint8, currentLevel *big.Int, newLevel *big.Int) error {
 	// Update Item
 	_, err := mw.dynamodb.UpdateItem(&dynamodb.UpdateItemInput{
 		TableName: aws.String(mw.table),
 		Key: map[string]*dynamodb.AttributeValue{
-			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opType))},
+			"KeyChainOp": {S: aws.String(getDynamoKey(keyHash, chainID, opMagicByte))},
 		},
 		ExpressionAttributeNames: map[string]*string{
 			"#Level": aws.String("Level"),
@@ -93,11 +93,11 @@ func (mw *DynamoWatermark) updateItem(keyHash string, chainID string, opType uin
 	return err
 }
 
-// IsSafeToSign returns true if the provided (key, chainID, opType) tuple has
+// IsSafeToSign returns true if the provided (key, chainID, opMagicByte) tuple has
 // not yet been signed at this or greater levels
-func (mw *DynamoWatermark) IsSafeToSign(keyHash string, chainID string, opType uint8, level *big.Int) bool {
+func (mw *DynamoWatermark) IsSafeToSign(keyHash string, chainID string, opMagicByte uint8, level *big.Int) bool {
 
-	currentLevel, err := mw.getCurrentLevel(keyHash, chainID, opType)
+	currentLevel, err := mw.getCurrentLevel(keyHash, chainID, opMagicByte)
 	if err != nil {
 		log.Println("Error: Unable to get current level", err)
 		return false
@@ -105,7 +105,7 @@ func (mw *DynamoWatermark) IsSafeToSign(keyHash string, chainID string, opType u
 
 	// Create a new item if none currently exists
 	if currentLevel == nil {
-		err := mw.putItem(keyHash, chainID, opType, level)
+		err := mw.putItem(keyHash, chainID, opMagicByte, level)
 		if err != nil {
 			return false
 		}
@@ -117,7 +117,7 @@ func (mw *DynamoWatermark) IsSafeToSign(keyHash string, chainID string, opType u
 		log.Println("Warning: Attempted to sign at an unsafe level. Will not allow.")
 		return false
 	} else {
-		err := mw.updateItem(keyHash, chainID, opType, currentLevel, level)
+		err := mw.updateItem(keyHash, chainID, opMagicByte, currentLevel, level)
 		if err != nil {
 			return false
 		}

@@ -14,7 +14,7 @@ func TestParseTx(t *testing.T) {
 		t.Fail()
 	}
 
-	if op.Watermark() != opWatermarkGeneric {
+	if op.MagicByte() != opMagicByteGeneric {
 		log.Println("Error decoding the tx type")
 		t.Fail()
 	}
@@ -28,8 +28,8 @@ func testParse(t *testing.T, test testOperation, id string) {
 		t.Fail()
 	}
 
-	if op.Watermark() != test.OpWatermark {
-		log.Printf("%v: Error decoding the op type.  Type: %v\n", id, op.Watermark())
+	if op.MagicByte() != test.OpMagicByte {
+		log.Printf("%v: Error decoding the op type.  Type: %v\n", id, op.MagicByte())
 		t.Fail()
 	}
 	level, _ := new(big.Int).SetString(test.Level, 10)
