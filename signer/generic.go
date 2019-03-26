@@ -15,6 +15,7 @@ type GenericOperation struct {
 // Defined in gitlb.com/tezos/tezos:
 // https://gitlab.com/tezos/tezos/blob/mainnet/src/proto_003_PsddFKi3/lib_protocol/src/operation_repr.ml
 const (
+	opKindUnknown     = 0xff
 	opKindProposals   = 0x05
 	opKindBallot      = 0x06
 	opKindTransaction = 0x08
@@ -32,6 +33,11 @@ func GetGenericOperation(op *Operation) *GenericOperation {
 
 // Kind of the generic operation
 func (op *GenericOperation) Kind() uint8 {
+	// Must be at least long enough to get the kind byte
+	if len(op.hex) <= 33 {
+		return opKindUnknown
+	}
+
 	return op.hex[33]
 }
 
@@ -130,6 +136,10 @@ func (op *GenericOperation) parseSerializedNumberOffset(offset int) *big.Int {
 // Parse a numbers starting at the provided index.  Return the number and
 // the index of the next byte in the operation.
 func (op *GenericOperation) parseSerializedNumber(startIndex int) (*big.Int, int) {
+	if len(op.hex) <= startIndex {
+		log.Println("[WARN] Ran into end of bytes while parsing.  Returning zero.")
+		return new(big.Int).SetInt64(0), startIndex
+	}
 	b := op.hex[startIndex]
 	nextIndex := startIndex + 1
 
