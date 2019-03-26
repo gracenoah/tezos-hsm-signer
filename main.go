@@ -17,11 +17,11 @@ var (
 	keyfile = flag.String("keyfile", "./keys.yaml", "Yaml file that identifies keys preloaded in your HSM")
 	debug   = flag.Bool("debug", false, "Enable debug mode")
 	// Operation Filter Flags
-	enableGeneric        = flag.Bool("enable-generic", false, "WARNING: Enables all generic operations including transmitting funds")
+	enableGeneric        = flag.Bool("enable-generic", false, "Enable all generic operations including transfer, voting and reveals")
 	enableTx             = flag.Bool("enable-tx", false, "Enable transferring funds")
-	enableVoting         = flag.Bool("enable-voting", false, "Enable voting on proposals")
-	txWhitelistAddresses = flag.String("tx-whitelist-addresses", "", "tz... addresses that transfers are enabled to")
-	txDailyMax           = flag.String("tx-daily-max", "", "Max amount of XTZ that can be sent offsite in a 24 hour period")
+	enableVoting         = flag.Bool("enable-voting", false, "Enable voting proposals and ballots")
+	txWhitelistAddresses = flag.String("tx-whitelist-addresses", "", "Comma delimited list of tz addresses that transfers are enabled to")
+	txDailyMax           = flag.String("tx-daily-max", "", "Max amount of XTZ that can be transferred in a 24 hour period")
 	// HSM Flags
 	hsmPin     = flag.String("hsm-pin", "", "User PIN to log into the HSM")
 	hsmPinFile = flag.String("hsm-pin-file", "", "Text file containing the user PIN to log into the HSM")
