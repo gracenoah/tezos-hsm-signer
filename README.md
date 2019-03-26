@@ -1,5 +1,5 @@
-Tezos Remote Signer
-===================
+Tezos HSM Signer
+================
 
 ![pipeline status](https://gitlab.com/polychain/tezos-hsm-signer/badges/master/pipeline.svg) ![coverage](https://gitlab.com/polychain/tezos-hsm-signer/badges/master/coverage.svg)
 
