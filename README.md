@@ -23,7 +23,7 @@ tezos-hsm-signer \
     --hsm-pin "1234" \
     --enable-tx \
     --tx-daily-max 500 \
-    --tx-whitelist-address "tz1...,tz2..." \
+    --tx-whitelist-addresses "tz1...,tz2..." \
     --key-file "./keys.yaml"
 ```
 
