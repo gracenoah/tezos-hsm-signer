@@ -15,12 +15,13 @@ go get -u gitlab.com/polychain/tezos-hsm-signer
 # Identify HSM keys and slots/labels
 $ vi keys.yaml
 
-# Launch a server backed by SoftHSM that can send 
-# up to 500 XTZ per day to the listed tz address
+# Launch an http signer backed by SoftHSM that can vote and 
+# transfer up to 500 XTZ per day to the listed tz address
 tezos-hsm-signer \
     --bind "localhost:6732" \
     --hsm-so "/usr/local/lib/softhsm/libsofthsm2.so" \
     --hsm-pin "1234" \
+    --enable-voting \
     --enable-tx \
     --tx-daily-max 500 \
     --tx-whitelist-addresses "tz1...,tz2..." \
