@@ -1,4 +1,4 @@
-module gitlab.com/polychain/tezos-hsm-signer
+module gitlab.com/polychainlabs/tezos-hsm-signer
 
 require (
 	github.com/aws/aws-sdk-go v1.19.1

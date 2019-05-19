@@ -10,7 +10,7 @@ import (
 	"strings"
 	"syscall"
 
-	"gitlab.com/polychain/tezos-hsm-signer/signer/watermark"
+	"gitlab.com/polychainlabs/tezos-hsm-signer/signer/watermark"
 )
 
 // Server holds all configuration data from the signer
