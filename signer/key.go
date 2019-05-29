@@ -34,7 +34,8 @@ func (key *Key) IsECDSA() bool {
 	return key.Curve() == curveNistP256 || key.Curve() == curveSecp256k1
 }
 
-func loadKeyFile(keyfile string) []Key {
+// LoadKeyFile loads keys from a file
+func LoadKeyFile(keyfile string) []Key {
 	keys := []Key{}
 
 	yamlFile, err := ioutil.ReadFile(keyfile)
