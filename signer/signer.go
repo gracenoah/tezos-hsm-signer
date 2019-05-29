@@ -1,29 +1,35 @@
 package signer
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
 	"math"
 
+	"golang.org/x/crypto/blake2b"
+	"golang.org/x/crypto/ed25519"
+
 	"github.com/miekg/pkcs11"
 )
 
-// Signer is a generic interface that HSM implements
+// Signer is a generic interface for a signer
 type Signer interface {
 	Sign(message []byte, key *Key) ([]byte, error)
 }
 
-// Hsm is responsible for signing an arbitrary byte slice with the given
+// PKCS11Signer is responsible for signing an arbitrary byte slice with the given
 // Key stored within the HSM
-type Hsm struct {
+type PKCS11Signer struct {
 	UserPin string `yaml:"UserPin"`
 	LibPath string `yaml:"LibPath"`
 }
 
+var _ Signer = &PKCS11Signer{}
+
 // getPrivateKeyHandle returns the handle of the private key loaded
 // into your HSM for the corresponding opened session
-func getPrivateKeyHandle(context *pkcs11.Ctx, session pkcs11.SessionHandle, tokenLabel string) (pkcs11.ObjectHandle, error) {
+func (*PKCS11Signer) getPrivateKeyHandle(context *pkcs11.Ctx, session pkcs11.SessionHandle, tokenLabel string) (pkcs11.ObjectHandle, error) {
 	var noKeyFound pkcs11.ObjectHandle = math.MaxUint8
 
 	// Combine attributes to select the correct key
@@ -66,7 +72,7 @@ func getPrivateKeyHandle(context *pkcs11.Ctx, session pkcs11.SessionHandle, toke
 }
 
 // Is Slot available in the provided slice of slots
-func isSlotAvailable(slotID uint, slots []uint) bool {
+func (*PKCS11Signer) isSlotAvailable(slotID uint, slots []uint) bool {
 	for _, value := range slots {
 		if value == slotID {
 			return true
@@ -76,7 +82,7 @@ func isSlotAvailable(slotID uint, slots []uint) bool {
 }
 
 // Sign a transaction request
-func (hsm *Hsm) Sign(message []byte, key *Key) ([]byte, error) {
+func (hsm *PKCS11Signer) Sign(message []byte, key *Key) ([]byte, error) {
 	context := pkcs11.New(hsm.LibPath)
 
 	err := context.Initialize()
@@ -95,7 +101,7 @@ func (hsm *Hsm) Sign(message []byte, key *Key) ([]byte, error) {
 	}
 
 	// Requested slot must be present
-	if !isSlotAvailable(key.HsmSlot, slots) {
+	if !hsm.isSlotAvailable(key.HsmSlot, slots) {
 		debugln("Available slots are: ", slots)
 		return nil, fmt.Errorf("Slot %v not found", key.HsmSlot)
 	}
@@ -115,7 +121,7 @@ func (hsm *Hsm) Sign(message []byte, key *Key) ([]byte, error) {
 	defer context.Logout(session)
 
 	// Get a handle to our private key
-	privateKey, err := getPrivateKeyHandle(context, session, key.HsmLabel)
+	privateKey, err := hsm.getPrivateKeyHandle(context, session, key.HsmLabel)
 	if err != nil {
 		fmt.Println("Error retrieving a handle to our private key: ", err)
 		return nil, err
@@ -132,4 +138,36 @@ func (hsm *Hsm) Sign(message []byte, key *Key) ([]byte, error) {
 	}
 
 	return signedMsg, nil
+}
+
+type inMemorySigner struct {
+	privateKey    ed25519.PrivateKey
+	publicKeyHash string
+}
+
+// NewInMemorySigner creates a signer from a key stored plaintext in memory.
+// It is not suitable for production use.
+func NewInMemorySigner(privateKey ed25519.PrivateKey) Signer {
+	publicKeyHash, err := blake2b.New(20, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = publicKeyHash.Write(privateKey.Public().(ed25519.PublicKey))
+	if err != nil {
+		panic(err.Error())
+	}
+	publicKeyHashBytes := publicKeyHash.Sum([]byte{})
+	prefix, _ := hex.DecodeString(tzEd25519PublicKeyHash)
+	publicKeyHashString := b58CheckEncode(prefix, publicKeyHashBytes)
+	return &inMemorySigner{
+		privateKey:    privateKey,
+		publicKeyHash: publicKeyHashString,
+	}
+}
+
+func (i *inMemorySigner) Sign(message []byte, key *Key) ([]byte, error) {
+	if key.PublicKeyHash != i.publicKeyHash {
+		return nil, fmt.Errorf("unknown key %s, expected %s", key.PublicKeyHash, i.publicKeyHash)
+	}
+	return ed25519.Sign(i.privateKey, message), nil
 }

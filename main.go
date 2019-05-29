@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"strings"
 
-	"gitlab.com/polychainlabs/tezos-hsm-signer/signer"
-	"gitlab.com/polychainlabs/tezos-hsm-signer/signer/watermark"
+	"github.com/gracenoah/tezos-hsm-signer/signer"
+	"github.com/gracenoah/tezos-hsm-signer/signer/watermark"
 )
 
 var (
@@ -81,6 +81,15 @@ func main() {
 		opFilter.TxWhitelistAddresses = strings.Split(*txWhitelistAddresses, ",")
 	}
 
-	signingServer := signer.CreateServer(*keyfile, *hsmPin, *hsmSO, *bind, opFilter, *debug, wm)
+	if opFilter.EnableGeneric || opFilter.EnableTx {
+		log.Println("WARNING: Transaction signing is enabled.  Use with caution.")
+	}
+
+	keys := signer.LoadKeyFile(*keyfile)
+	pkcs11Signer := &signer.PKCS11Signer{
+		UserPin: *hsmPin,
+		LibPath: *hsmSO,
+	}
+	signingServer := signer.NewServer(pkcs11Signer, keys, *bind, opFilter, wm)
 	signingServer.Serve()
 }

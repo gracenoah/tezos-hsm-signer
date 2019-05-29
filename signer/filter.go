@@ -22,7 +22,10 @@ type OperationFilter struct {
 
 // IsAllowed by this filter?
 func (filter *OperationFilter) IsAllowed(op *Operation) bool {
-	if op.MagicByte() == opMagicByteGeneric {
+	switch op.MagicByte() {
+	case opMagicByteBlock, opMagicByteEndorsement:
+		return true
+	case opMagicByteGeneric:
 		generic := GetGenericOperation(op)
 		if filter.EnableGeneric {
 			return true
@@ -37,9 +40,9 @@ func (filter *OperationFilter) IsAllowed(op *Operation) bool {
 			return true
 		}
 		return false
+	default:
+		return false
 	}
-	return true
-
 }
 
 // Is this address whitelisted? Returns true if whitelistising is disabled

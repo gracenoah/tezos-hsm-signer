@@ -10,7 +10,7 @@ import (
 	"strings"
 	"syscall"
 
-	"gitlab.com/polychainlabs/tezos-hsm-signer/signer/watermark"
+	"github.com/gracenoah/tezos-hsm-signer/signer/watermark"
 )
 
 // Server holds all configuration data from the signer
@@ -22,23 +22,14 @@ type Server struct {
 	watermark  watermark.Watermark
 }
 
-// CreateServer returns a newly configured server
-func CreateServer(keyfile string, hsmPin string, hsmSo string, serverBindString string, opFilter OperationFilter, debug bool, wm watermark.Watermark) *Server {
-	debugEnabled = debug
-
-	if opFilter.EnableGeneric || opFilter.EnableTx {
-		log.Println("WARNING: Transaction signing is enabled.  Use with caution.")
-	}
-
+// NewServer returns a new server
+func NewServer(signer Signer, keys []Key, bindString string, filter OperationFilter, watermark watermark.Watermark) *Server {
 	return &Server{
-		keys: loadKeyFile(keyfile),
-		signer: &Hsm{
-			UserPin: hsmPin,
-			LibPath: hsmSo,
-		},
-		filter:     opFilter,
-		bindString: serverBindString,
-		watermark:  wm,
+		signer:     signer,
+		keys:       keys,
+		bindString: bindString,
+		filter:     filter,
+		watermark:  watermark,
 	}
 }
 
