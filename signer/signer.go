@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -9,6 +10,9 @@ import (
 
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/ed25519"
+
+	cloudkms "cloud.google.com/go/kms/apiv1"
+	kmspb "google.golang.org/genproto/googleapis/cloud/kms/v1"
 
 	"github.com/miekg/pkcs11"
 )
@@ -170,4 +174,33 @@ func (i *inMemorySigner) Sign(message []byte, key *Key) ([]byte, error) {
 		return nil, fmt.Errorf("unknown key %s, expected %s", key.PublicKeyHash, i.publicKeyHash)
 	}
 	return ed25519.Sign(i.privateKey, message), nil
+}
+
+type googleCloudKMSSigner struct{}
+
+// NewGoogleCloudKMSSigner creates a signer backed by Google Cloud KMS
+func NewGoogleCloudKMSSigner() Signer {
+	return &googleCloudKMSSigner{}
+}
+
+func (g *googleCloudKMSSigner) Sign(message []byte, key *Key) ([]byte, error) {
+	ctx := context.Background()
+	client, err := cloudkms.NewKeyManagementClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	req := &kmspb.AsymmetricSignRequest{
+		Name: key.Name,
+		Digest: &kmspb.Digest{
+			// It's actually Blake2b.Sum256, not SHA256, but google doesn't know the difference
+			Digest: &kmspb.Digest_Sha256{
+				Sha256: message,
+			},
+		},
+	}
+	response, err := client.AsymmetricSign(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("asymmetric sign request failed: %+v", err)
+	}
+	return response.Signature, nil
 }
