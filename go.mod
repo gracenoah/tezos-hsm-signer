@@ -3,7 +3,8 @@ module github.com/gracenoah/tezos-hsm-signer
 require (
 	cloud.google.com/go v0.40.0
 	github.com/aws/aws-sdk-go v1.19.1
-	github.com/btcsuite/btcutil v0.0.0-20190316010144-3ac1210f4b38
+	github.com/btcsuite/btcd v0.0.0-20190614013741-962a206e94e9
+	github.com/btcsuite/btcutil v0.0.0-20190425235716-9e5f4b9a998d
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/miekg/pkcs11 v0.0.0-20190322140431-074fd7a1ed19
 	github.com/stretchr/testify v1.3.0 // indirect
