@@ -156,7 +156,7 @@ func (server *Server) RouteKeysPOST(w http.ResponseWriter, r *http.Request, key 
 	}
 
 	// Sign the operation
-	signed, err := op.TzSign(server.signer, key)
+	signed, err := op.TzSign(r.Context(), server.signer, key)
 	if err != nil {
 		log.Println("Error signing request:", err)
 

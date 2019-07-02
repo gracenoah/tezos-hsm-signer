@@ -2,6 +2,7 @@ package signer
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +20,7 @@ type testSigner struct {
 	SignedBytes []byte
 }
 
-func (signer *testSigner) Sign(message []byte, key *Key) ([]byte, error) {
+func (signer *testSigner) Sign(_ context.Context, message []byte, key *Key) ([]byte, error) {
 	return signer.SignedBytes, nil
 }
 

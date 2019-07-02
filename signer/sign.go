@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 
@@ -8,7 +9,7 @@ import (
 )
 
 // TzSign this operation with the provided Signer and Key
-func (op *Operation) TzSign(signer Signer, key *Key) (string, error) {
+func (op *Operation) TzSign(ctx context.Context, signer Signer, key *Key) (string, error) {
 	msg := op.Hex()
 	debugln("Signing for key: ", key.PublicKeyHash)
 	debugln("About to sign raw bytes hex.EncodeToString(bytes): ", hex.EncodeToString(msg))
@@ -17,7 +18,7 @@ func (op *Operation) TzSign(signer Signer, key *Key) (string, error) {
 	digest := blake2b.Sum256(msg)
 
 	// Sign
-	signedMsg, err := signer.Sign(digest[:], key)
+	signedMsg, err := signer.Sign(ctx, digest[:], key)
 	if err != nil {
 		return "", err
 	}

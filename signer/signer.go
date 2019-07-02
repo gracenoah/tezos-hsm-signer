@@ -21,7 +21,7 @@ import (
 
 // Signer is a generic interface for a signer
 type Signer interface {
-	Sign(message []byte, key *Key) ([]byte, error)
+	Sign(ctx context.Context, message []byte, key *Key) ([]byte, error)
 }
 
 // PKCS11Signer is responsible for signing an arbitrary byte slice with the given
@@ -88,7 +88,7 @@ func (*PKCS11Signer) isSlotAvailable(slotID uint, slots []uint) bool {
 }
 
 // Sign a transaction request
-func (hsm *PKCS11Signer) Sign(message []byte, key *Key) ([]byte, error) {
+func (hsm *PKCS11Signer) Sign(_ context.Context, message []byte, key *Key) ([]byte, error) {
 	context := pkcs11.New(hsm.LibPath)
 
 	err := context.Initialize()
@@ -171,26 +171,25 @@ func NewInMemorySigner(privateKey ed25519.PrivateKey) Signer {
 	}
 }
 
-func (i *inMemorySigner) Sign(message []byte, key *Key) ([]byte, error) {
+func (i *inMemorySigner) Sign(_ context.Context, message []byte, key *Key) ([]byte, error) {
 	if key.PublicKeyHash != i.publicKeyHash {
 		return nil, fmt.Errorf("unknown key %s, expected %s", key.PublicKeyHash, i.publicKeyHash)
 	}
 	return ed25519.Sign(i.privateKey, message), nil
 }
 
-type googleCloudKMSSigner struct{}
-
-// NewGoogleCloudKMSSigner creates a signer backed by Google Cloud KMS
-func NewGoogleCloudKMSSigner() Signer {
-	return &googleCloudKMSSigner{}
+type googleCloudKMSSigner struct {
+	kmsClient *cloudkms.KeyManagementClient
 }
 
-func (g *googleCloudKMSSigner) Sign(message []byte, key *Key) ([]byte, error) {
-	ctx := context.Background()
-	client, err := cloudkms.NewKeyManagementClient(ctx)
-	if err != nil {
-		return nil, err
+// NewGoogleCloudKMSSigner creates a signer backed by Google Cloud KMS
+func NewGoogleCloudKMSSigner(kmsClient *cloudkms.KeyManagementClient) Signer {
+	return &googleCloudKMSSigner{
+		kmsClient: kmsClient,
 	}
+}
+
+func (g *googleCloudKMSSigner) Sign(ctx context.Context, message []byte, key *Key) ([]byte, error) {
 	req := &kmspb.AsymmetricSignRequest{
 		Name: key.Name,
 		Digest: &kmspb.Digest{
@@ -200,7 +199,7 @@ func (g *googleCloudKMSSigner) Sign(message []byte, key *Key) ([]byte, error) {
 			},
 		},
 	}
-	response, err := client.AsymmetricSign(ctx, req)
+	response, err := g.kmsClient.AsymmetricSign(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("asymmetric sign request failed: %+v", err)
 	}
