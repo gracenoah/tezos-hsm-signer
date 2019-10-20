@@ -1,6 +1,7 @@
 package signer
 
 import (
+	"bytes"
 	"context"
 	"crypto/elliptic"
 	"encoding/hex"
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/big"
 
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/ed25519"
@@ -207,9 +209,16 @@ func (g *googleCloudKMSSigner) Sign(ctx context.Context, message []byte, key *Ke
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse ASN.1 encoded ECDSA signature")
 	}
-	sigBytes := append(signature.R.Bytes(), signature.S.Bytes()...)
+
+	sigBytes := append(bigIntTo32Bytes(signature.R), bigIntTo32Bytes(signature.S)...)
 	if len(sigBytes) != 64 {
 		return nil, fmt.Errorf("unexpected signature length: %d bytes, expected %d bytes", len(sigBytes), 64)
 	}
 	return sigBytes, nil
+}
+
+func bigIntTo32Bytes(b *big.Int) []byte {
+	bs := b.Bytes()
+	padding := bytes.Repeat([]byte{0}, 32-len(bs))
+	return append(padding, bs...)
 }
