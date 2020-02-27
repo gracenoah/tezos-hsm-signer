@@ -18,7 +18,7 @@ const (
 	opKindUnknown     = 0xff
 	opKindProposals   = 0x05
 	opKindBallot      = 0x06
-	opKindTransaction = 0x08
+	opKindTransaction = 0x6C
 )
 
 // GetGenericOperation to parse specific Generic fields
